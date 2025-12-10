@@ -12,6 +12,7 @@ import {
   X,
   Car,
   Share2,
+  Plus,
 } from "lucide-react";
 import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { getPropertyFromWebhook } from "@/hooks/Admin/PropertyService";
@@ -23,13 +24,12 @@ const Footer = lazy(() => import("@/components/Footer"));
 const PropertyDetails = () => {
   const { id } = useParams();
   const [property, setProperty] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [lightboxClosing, setLightboxClosing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const { toast } = useToast();
 
@@ -87,36 +87,24 @@ const PropertyDetails = () => {
   };
 
   const convertStorePropertyToComponentFormat = (storeProperty: any) => {
-    // Converter imagens do store para o formato do componente
     const fotosArray = storeProperty.images?.map((img: any) => ({
       type: "image",
       url: img.url,
     })) || [];
 
-    // Converter vídeos do store para o formato do componente
     const videosArray = storeProperty.videos?.map((video: any) => ({
       type: "video",
       url: video.url,
     })) || [];
 
-    // Converter plantas/arquitetura
-    const plantasArray = storeProperty.architectural_plans?.map((plano: any) => ({
-      type: "image",
-      url: plano.url,
-      isPlan: true // Flag para identificar que é uma planta
-    })) || [];
-
-    // Converter características/amenities
     const caracteristicasArray = storeProperty.amenities?.map((amenity: any) => 
       amenity.amenity_name || ''
     ).filter(Boolean) || [];
 
-    // Converter property_types
     const propertyTypesArray = storeProperty.property_types?.map((type: any) => 
       type.property_type_name || ''
     ).filter(Boolean) || [];
 
-    // Converter categories
     const categoriesArray = storeProperty.categories?.map((category: any) => 
       category.category_name || ''
     ).filter(Boolean) || [];
@@ -145,58 +133,57 @@ const PropertyDetails = () => {
       amenities: caracteristicasArray,
       fotos: fotosArray,
       videos: videosArray,
-      plantas: plantasArray, // Adicionado array de plantas
       whatsapp: "554792639593",
       status: true,
     };
   };
 
-  // BUSCAR IMÓVEL - NOVA LÓGICA
   const fetchProperty = async () => {
-    setLoading(true);
-
-    console.log('🔍 Iniciando busca do imóvel ID:', id);
-
-    // 1. PRIMEIRO verifica se há dados no store
-    if (currentProperty && currentProperty.id.toString() === id) {
-      console.log('✅ Dados carregados do store:', currentProperty.property_title);
-      
-      const storeProperty = convertStorePropertyToComponentFormat(currentProperty);
-      setProperty(storeProperty);
-      setLoading(false);
-      return;
-    }
-
-    console.log('🔄 Dados não encontrados no store, buscando via webhook...');
-
-    // 2. SE NÃO, faz a requisição via webhook
     try {
+      console.log(`[PropertyDetails] 🔄 Buscando imóvel ID: ${id}`);
+
+      if (currentProperty && currentProperty.id.toString() === id) {
+        console.log(`[PropertyDetails] ✅ Encontrado no store: ${currentProperty.property_title}`);
+        
+        const storeProperty = convertStorePropertyToComponentFormat(currentProperty);
+        setProperty(storeProperty);
+        return;
+      }
+
+      console.log(`[PropertyDetails] 🔍 Não encontrado no store, buscando via webhook...`);
+
       const webhookData = await getPropertyFromWebhook();
       
-      // Encontrar o imóvel específico nos dados do webhook
       const foundProperty = findPropertyInWebhookData(webhookData, id);
       
       if (foundProperty) {
-        console.log('✅ Imóvel encontrado via webhook:', foundProperty.property_title);
+        console.log(`[PropertyDetails] ✅ Encontrado via webhook: ${foundProperty.property_title}`);
         const convertedProperty = convertStorePropertyToComponentFormat(foundProperty);
         setProperty(convertedProperty);
       } else {
-        console.error('❌ Imóvel não encontrado via webhook');
+        console.log(`[PropertyDetails] ❌ Imóvel não encontrado nos dados do webhook`);
         setProperty(null);
       }
     } catch (webhookError) {
-      console.error("Erro ao carregar via webhook:", webhookError);
+      console.error("[PropertyDetails] ❌ Erro ao buscar dados do webhook:", webhookError);
       setProperty(null);
+    } finally {
+      setIsInitialized(true);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
-    if (id) {
-      fetchProperty();
-    }
-  }, [id]);
+    if (!id) return;
+
+    const timer = setTimeout(() => {
+      if (!isInitialized) {
+        console.log("[PropertyDetails] 🚀 Iniciando carregamento após renderização...");
+        fetchProperty();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [id, isInitialized]);
 
   useEffect(() => {
     return () => {
@@ -204,25 +191,8 @@ const PropertyDetails = () => {
     };
   }, [clearCurrentProperty]);
 
-  const openLightbox = (index: number, type: 'imagens' | 'videos' | 'plantas') => {
-    // Determinar qual galeria usar
-    let mediaArray = [];
-    if (type === 'imagens') mediaArray = property.fotos;
-    else if (type === 'videos') mediaArray = property.videos;
-    else if (type === 'plantas') mediaArray = property.plantas;
-
-    // Calcular o índice global na galeria combinada
-    let globalIndex = 0;
-    
-    if (type === 'imagens') {
-      globalIndex = index; // Índice direto nas imagens
-    } else if (type === 'videos') {
-      globalIndex = property.fotos.length + index; // Índice após todas as imagens
-    } else if (type === 'plantas') {
-      globalIndex = property.fotos.length + property.videos.length + index; // Índice após imagens e vídeos
-    }
-
-    setLightboxIndex(globalIndex);
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
     setLightboxOpen(true);
     document.body.style.overflow = 'hidden';
   };
@@ -237,16 +207,14 @@ const PropertyDetails = () => {
   };
 
   const nextMedia = () => {
-    const totalMedia = property.fotos.length + property.videos.length + property.plantas.length;
     setLightboxIndex((prev) =>
-      prev + 1 < totalMedia ? prev + 1 : 0
+      prev + 1 < gallery.length ? prev + 1 : 0
     );
   };
 
   const prevMedia = () => {
-    const totalMedia = property.fotos.length + property.videos.length + property.plantas.length;
     setLightboxIndex((prev) =>
-      prev - 1 >= 0 ? prev - 1 : totalMedia - 1
+      prev - 1 >= 0 ? prev - 1 : gallery.length - 1
     );
   };
 
@@ -351,252 +319,7 @@ const PropertyDetails = () => {
     );
   };
 
-  // Função para renderizar a galeria de imagens normais COM NOVO LAYOUT
-  const renderImagensGaleria = () => {
-    if (property.fotos.length === 0) return null;
-
-    const heroImage = property.fotos[0]?.url || "";
-    const galleryImages = property.fotos.slice(1); // Restante das imagens
-    
-    const visibleImages = galleryImages.slice(0, 2);
-    const extraImages = galleryImages.length - 2;
-
-    return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Imagens</h2>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {/* Primeira imagem principal - MAIOR */}
-          {heroImage && (
-            <div
-              onClick={() => openLightbox(0, 'imagens')}
-              className="relative overflow-hidden rounded-lg sm:rounded-xl cursor-pointer group sm:col-span-2 aspect-[5/5]"
-            >
-              <img
-                src={heroImage}
-                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                alt="Imagem principal do imóvel"
-                loading="lazy"
-              />
-            </div>
-          )}
-
-          {/* Container para as duas imagens menores */}
-          <div className="flex flex-col gap-3 sm:gap-4">
-            {/* Segunda imagem - MENOR */}
-            {visibleImages[0] && (
-              <div
-                onClick={() => openLightbox(1, 'imagens')}
-                className="relative overflow-hidden rounded-lg sm:rounded-xl cursor-pointer group aspect-square"
-              >
-                <img
-                  src={visibleImages[0].url}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  alt={`Imagem 2 do imóvel`}
-                  loading="lazy"
-                />
-              </div>
-            )}
-
-            {/* Terceira imagem - MENOR com contagem */}
-            {visibleImages[1] && (
-              <div
-                onClick={() => openLightbox(2, 'imagens')}
-                className="relative overflow-hidden rounded-lg sm:rounded-xl cursor-pointer group aspect-square"
-              >
-                <img
-                  src={visibleImages[1].url}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  alt={`Imagem 3 do imóvel`}
-                  loading="lazy"
-                />
-                
-                {/* Overlay com contagem de imagens */}
-                {extraImages > 0 && (
-                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white font-semibold">
-                    <span className="text-lg sm:text-xl md:text-2xl">+{extraImages + 1}</span>
-                    <span className="text-xs sm:text-sm mt-1">imagens</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Galeria mobile horizontal para TODAS as imagens */}
-        {isMobile && property.fotos.length > 0 && (
-          <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 mt-4">
-            {property.fotos.map((item: any, index: number) => (
-              <div
-                key={index}
-                className="min-w-[85vw] h-52 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer"
-                onClick={() => openLightbox(index, 'imagens')}
-              >
-                <img
-                  src={item.url}
-                  className="w-full h-full object-cover"
-                  alt={`Imagem ${index + 1} do imóvel`}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Função para renderizar a galeria de vídeos COM CARROSSEL MOBILE
-  const renderVideosGaleria = () => {
-    if (property.videos.length === 0) return null;
-
-    const visibleVideos = property.videos.slice(0, 4);
-    const extraVideos = property.videos.length - 4;
-
-    return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Vídeos</h2>
-        
-        {/* Desktop layout */}
-        {!isMobile && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {visibleVideos.map((video: any, index: number) => (
-              <div
-                key={index}
-                onClick={() => openLightbox(index, 'videos')}
-                className="relative overflow-hidden rounded-lg sm:rounded-xl cursor-pointer group aspect-video"
-              >
-                <video
-                  src={video.url}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                />
-                
-                {/* Overlay de play */}
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/90 rounded-full flex items-center justify-center">
-                    <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-black border-b-[10px] border-b-transparent ml-1"></div>
-                  </div>
-                </div>
-
-                {index === 3 && extraVideos > 0 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg sm:text-xl md:text-2xl font-semibold">
-                    +{extraVideos} vídeos
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Mobile layout - carrossel */}
-        {isMobile && (
-          <>
-            <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
-              {property.videos.map((video: any, index: number) => (
-                <div
-                  key={index}
-                  className="min-w-[85vw] h-52 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer relative"
-                  onClick={() => openLightbox(index, 'videos')}
-                >
-                  <video
-                    src={video.url}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                  />
-                  
-                  {/* Overlay de play */}
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                      <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-black border-b-[10px] border-b-transparent ml-1"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Indicador de vídeos */}
-            {property.videos.length > 1 && (
-              <div className="text-center text-sm text-muted-foreground mt-2">
-                {property.videos.length} vídeos disponíveis
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
-  };
-
-  // Função para renderizar a galeria de plantas/arquitetura COM CARROSSEL MOBILE
-  const renderPlantasGaleria = () => {
-    if (!property.plantas || property.plantas.length === 0) return null;
-
-    const visiblePlantas = property.plantas.slice(0, 4);
-    const extraPlantas = property.plantas.length - 4;
-
-    return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Plantas e Arquitetura</h2>
-        
-        {/* Desktop layout */}
-        {!isMobile && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {visiblePlantas.map((planta: any, index: number) => (
-              <div
-                key={index}
-                onClick={() => openLightbox(index, 'plantas')}
-                className="relative overflow-hidden rounded-lg sm:rounded-xl cursor-pointer group aspect-video"
-              >
-                <img
-                  src={planta.url}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  alt={`Planta ${index + 1} do imóvel`}
-                  loading="lazy"
-                />
-
-                {index === 3 && extraPlantas > 0 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg sm:text-xl md:text-2xl font-semibold">
-                    +{extraPlantas} plantas
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Mobile layout - carrossel */}
-        {isMobile && (
-          <>
-            <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
-              {property.plantas.map((planta: any, index: number) => (
-                <div
-                  key={index}
-                  className="min-w-[85vw] h-52 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer"
-                  onClick={() => openLightbox(index, 'plantas')}
-                >
-                  <img
-                    src={planta.url}
-                    className="w-full h-full object-cover"
-                    alt={`Planta ${index + 1} do imóvel`}
-                  />
-                </div>
-              ))}
-            </div>
-            
-            {/* Indicador de plantas */}
-            {property.plantas.length > 1 && (
-              <div className="text-center text-sm text-muted-foreground mt-2">
-                {property.plantas.length} plantas disponíveis
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
-  };
-
-  if (loading) {
+  if (!isInitialized) {
     return (
       <div className="min-h-screen bg-background">
         <Suspense fallback={<div className="h-20 bg-background" />}>
@@ -705,14 +428,23 @@ const PropertyDetails = () => {
     );
   }
 
-  // ORGANIZAÇÃO DA GALERIA COMBINADA (para lightbox)
-  const combinedGallery = [
-    ...property.fotos.map((foto: any) => ({ ...foto, type: "image" })),
-    ...property.videos.map((video: any) => ({ ...video, type: "video" })),
-    ...property.plantas.map((planta: any) => ({ ...planta, type: "image" }))
+  const heroImage = property.fotos[0]?.url || "";
+
+  const gallery = [
+    ...(heroImage ? [{ type: "image", url: heroImage }] : []),
+    ...property.fotos.slice(1),
+    ...property.videos,
   ];
 
-  const currentMedia = combinedGallery?.[lightboxIndex];
+  // Para mobile: mostrar apenas 2 fotos principais + botão "ver mais"
+  const visibleGalleryMobile = gallery.slice(0, 2);
+  const hasMoreMediaMobile = gallery.length > 2;
+
+  // Para desktop: mostrar 4 fotos
+  const visibleGalleryDesktop = gallery.slice(0, 4);
+  const hasMoreMediaDesktop = gallery.length > 4;
+
+  const currentMedia = gallery?.[lightboxIndex];
   const enderecoFormatado = formatEndereco();
   const heroHeight = isMobile 
     ? `calc(50vh * ${scrollProgress})`
@@ -734,7 +466,7 @@ const PropertyDetails = () => {
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-300"
           style={{ 
-            backgroundImage: `url(${property.fotos[0]?.url})`,
+            backgroundImage: `url(${heroImage})`,
             transform: isMobile ? `scale(${1 + (0.3 * (1 - scrollProgress))})` : 'none'
           }}
         />
@@ -811,14 +543,107 @@ const PropertyDetails = () => {
                 )}
               </div>
 
-              {/* GALERIA DE IMAGENS */}
-              {renderImagensGaleria()}
+              {/* GALERIA - MOBILE E DESKTOP SEPARADOS */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                  <h2 className="text-2xl font-bold">Galeria</h2>
+                  
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-gray-700 transition w-full sm:w-auto"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Compartilhar</span>
+                  </button>
+                </div>
 
-              {/* GALERIA DE VÍDEOS */}
-              {renderVideosGaleria()}
+                {/* GALERIA MOBILE - Layout 2 fotos + botão "ver mais" */}
+                <div className="sm:hidden">
+                  <div className="grid grid-cols-2 gap-3">
+                    {visibleGalleryMobile.map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        onClick={() => openLightbox(index)}
+                        className="relative overflow-hidden rounded-lg cursor-pointer group aspect-square"
+                      >
+                        {item.type === "image" ? (
+                          <img
+                            src={item.url}
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            alt={`Imagem ${index + 1} do imóvel`}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <video
+                            src={item.url}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                          />
+                        )}
+                      </div>
+                    ))}
 
-              {/* GALERIA DE PLANTAS */}
-              {renderPlantasGaleria()}
+                    {/* BOTÃO "VER MAIS" PARA MOBILE */}
+                    {hasMoreMediaMobile && (
+                      <div
+                        onClick={() => openLightbox(2)}
+                        className="relative overflow-hidden rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 transition-colors aspect-square flex flex-col items-center justify-center border-2 border-dashed border-gray-300"
+                      >
+                        <div className="text-center p-4">
+                          <Plus className="w-8 h-8 text-gray-400 mb-2 mx-auto" />
+                          <p className="text-sm font-medium text-gray-700">Ver mais</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            +{gallery.length - 2} mídias
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* GALERIA DESKTOP */}
+                <div className="hidden sm:block">
+                  <div className="grid grid-cols-2 gap-4">
+                    {visibleGalleryDesktop.map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        onClick={() => openLightbox(index)}
+                        className="relative overflow-hidden rounded-xl cursor-pointer group aspect-video"
+                      >
+                        {item.type === "image" ? (
+                          <img
+                            src={item.url}
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            alt={`Imagem ${index + 1} do imóvel`}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <video
+                            src={item.url}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                          />
+                        )}
+
+                        {/* Overlay para mostrar +X mídias na última imagem (desktop) */}
+                        {index === 3 && hasMoreMediaDesktop && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <div className="text-center">
+                              <Plus className="w-8 h-8 text-white mb-2 mx-auto" />
+                              <p className="text-white text-lg font-semibold">
+                                +{gallery.length - 4}
+                              </p>
+                              <p className="text-white/80 text-sm">Ver mais</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {/* DESCRIÇÃO */}
               <div className="space-y-4">
@@ -840,15 +665,6 @@ const PropertyDetails = () => {
                 <p className="text-muted-foreground text-sm sm:text-base">
                   Fale diretamente com Heleno!
                 </p>
-
-                {/* BOTÃO COMPARTILHAR */}
-                <button
-                  onClick={handleShare}
-                  className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-3 rounded-lg text-gray-700 transition w-full"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>Compartilhar</span>
-                </button>
 
                 <Button variant="gold" size="lg" className="w-full" asChild>
                   <a
@@ -941,11 +757,6 @@ const PropertyDetails = () => {
             >
               <X className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
-
-            {/* CONTADOR */}
-            <div className="absolute top-4 left-4 sm:top-6 sm:left-6 text-white z-20 bg-black/50 px-3 py-1 rounded-full backdrop-blur-md text-sm">
-              {lightboxIndex + 1} / {combinedGallery.length}
-            </div>
 
             {/* NAVEGAÇÃO DESKTOP */}
             {!isMobile && (
