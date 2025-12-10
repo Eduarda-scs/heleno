@@ -368,20 +368,7 @@ export default function AboutFG() {
                         </p>
 
                         <div className="flex gap-3 mt-6 fade-item">
-                          {empresa.pdf && (
-                            <a
-                              href={empresa.pdf}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                className="bg-green-600 hover:bg-green-700 rounded-full px-4 py-2 text-sm text-white"
-                              >
-                                PDF
-                              </button>
-                            </a>
-                          )}
+                          
 
                           <a
                             href="/empreendimentos"

@@ -56,6 +56,15 @@ const Footer = () => {
                   (47) 99263-9593
                 </a>
               </li>
+               <li className="flex items-center gap-2 text-sm text-primary-foreground/80">
+                <Phone className="w-4 h-4 flex-shrink-0 text-secondary" />
+                <a
+                  href="https://wa.me/558588085349"
+                  className="hover:text-secondary transition-colors"
+                >
+                  (85) 98808-5349
+                </a>
+              </li>
               <li className="flex items-center gap-2 text-sm text-primary-foreground/80">
                 <Mail className="w-4 h-4 flex-shrink-0 text-secondary" />
                 <a

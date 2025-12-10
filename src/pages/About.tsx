@@ -166,17 +166,28 @@ const About = () => {
                   O trabalho de Heleno Alves é movido pela crença de que cada negociação merece
                   excelência absoluta. Seu atendimento une estratégia, sensibilidade e uma leitura
                   precisa do mercado, permitindo que cada cliente visualize não apenas um imóvel,
-                  mas um patrimônio de valor crescente...
+                  mas um patrimônio de valor crescente.  Seu olhar analítico, aliado à experiência 
+                  de quase três décadas, faz com que Heleno identifique oportunidades exclusivas e 
+                  conduza negociações de alto impacto com segurança, clareza e rentabilidade.
                 </p>
 
                 <p>
                   Sua atuação abrange desde a curadoria de empreendimentos seletos até a negociação
-                  de propriedades que integram o topo do mercado nacional...
+                  de propriedades que integram o topo do mercado nacional.A entrada de Heleno no 
+                  processo de comercialização do Senna Tower, considerado o edifício residencial mais 
+                  alto do mundo, evidencia seu nível de autoridade e reforça sua presença entre os 
+                  profissionais mais preparados para lidar com imóveis de altíssimo valor. Ele entrega 
+                  não apenas opções, mas estratégias completas para famílias e investidores que buscam 
+                  precisão, visão de futuro e excelência.
                 </p>
 
                 <p>
                   Além disso, Heleno se consolidou como uma voz relevante nas redes sociais,
-                  criando conteúdo que educa e aproxima...
+                  criando conteúdo que educa e aproxima,  e fortalecendo sua imagem como 
+                  especialista em imóveis de luxo. Para compradores exigentes, investidores 
+                  criteriosos e famílias que valorizam segurança e sofisticação, Heleno Alves 
+                  representa o equilíbrio perfeito entre experiência, ética e resultados 
+                  extraordinários.
                 </p>
               </div>
             </div>

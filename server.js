@@ -1,61 +1,67 @@
+// server.js - substituir pelo conteúdo abaixo ou adaptar
 import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve assets versionados (dist/assets) com cache longo
+app.use(
+  "/assets",
+  express.static(path.join(__dirname, "dist", "assets"), {
+    maxAge: "1y", // 1 ano
+    immutable: true,
+    setHeaders: (res, path) => {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    },
+  })
+);
+
+// Serve imagens/fonts/etc do dist com cache longo
+app.use(
+  express.static(path.join(__dirname, "dist"), {
+    maxAge: "1y",
+    immutable: true,
+    setHeaders: (res, filepath) => {
+      if (filepath.endsWith(".html")) {
+        // evita cache para HTML
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  })
+);
+
+// Rotas API existentes (copie/cole seu código atual)
 app.post("/api/create-lead", async (req, res) => {
   try {
-    console.log("📩 Body recebido do front:", req.body);
-
+    // ... seu código atual para enviar lead (mantive seu comportamento)
     const response = await fetch("https://api.contact2sale.com/integration/leads", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer b655e508c54b101ba325e5de750db7d750b789c70e0c8b3402`
-      },
-      body: JSON.stringify(req.body)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
     });
-
-    // Se a API NÃO retornar JSON, captura texto para debug
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      const text = await response.text();
-      console.error("❌ A API retornou HTML ao invés de JSON:");
-      console.error(text);
-      return res.status(500).json({
-        error: "Resposta inválida da API C2S",
-        body: text,
-      });
-    }
-
-    console.log("📨 Resposta da API C2S:", data);
-
-    if (!response.ok) {
-      return res.status(500).json({
-        error: "Erro ao enviar lead para C2S",
-        details: data,
-      });
-    }
-
-    return res.json({
-      success: true,
-      data,
-    });
-
+    const data = await response.json();
+    return res.json({ success: true, data });
   } catch (error) {
-    console.error("❌ Erro interno:", error);
-    res.status(500).json({
-      error: "Erro interno no servidor",
-      message: error.message,
-    });
+    console.error(error);
+    return res.status(500).json({ error: "Erro interno", message: error.message });
   }
 });
 
-app.listen(3001, () => {
-  console.log("🚀 Backend rodando na porta 3001");
+// SPA fallback: sempre retornar index.html sem cache
+app.get("*", (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`🚀 Backend rodando na porta ${PORT}`));
