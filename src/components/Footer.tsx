@@ -50,7 +50,7 @@ const Footer = () => {
               <li className="flex items-center gap-2 text-sm text-primary-foreground/80">
                 <Phone className="w-4 h-4 flex-shrink-0 text-secondary" />
                 <a
-                  href="https://wa.me/5547992639593"
+                  href="https://wa.me/5547992639593?text=Olá, venho do seu site tenho interesse no imóvel"
                   className="hover:text-secondary transition-colors"
                 >
                   (47) 99263-9593
@@ -59,7 +59,7 @@ const Footer = () => {
                <li className="flex items-center gap-2 text-sm text-primary-foreground/80">
                 <Phone className="w-4 h-4 flex-shrink-0 text-secondary" />
                 <a
-                  href="https://wa.me/558588085349"
+                  href="https://wa.me/558588085349?text=Olá, venho do seu site tenho interesse no imóvel"
                   className="hover:text-secondary transition-colors"
                 >
                   (85) 98808-5349
