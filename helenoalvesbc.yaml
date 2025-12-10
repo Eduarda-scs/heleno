@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  helenoalvesbc:
+    image: helenoalvesbc:latest
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+
+        # Domínio
+        - "traefik.http.routers.helenoalvesbc.rule=Host(`helenoalvesbc.com.br`)"
+
+        # HTTPS
+        - "traefik.http.routers.helenoalvesbc.entrypoints=websecure"
+        - "traefik.http.routers.helenoalvesbc.tls.certresolver=letsencryptresolver"
+
+        # Porta interna — SEMPRE 80 para NGINX
+        - "traefik.http.services.helenoalvesbc.loadbalancer.server.port=80"
+
+        # HTTP → HTTPS (opcional, mas recomendado)
+        - "traefik.http.routers.helenoalvesbc-http.rule=Host(`helenoalvesbc.com.br`)"
+        - "traefik.http.routers.helenoalvesbc-http.entrypoints=web"
+        - "traefik.http.routers.helenoalvesbc-http.middlewares=redirect-https@docker"
+
+    networks:
+      - network_public
+
+networks:
+  network_public:
+    external: true

@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Delmon Delicate";
+  src: url("/fonts/Delmon Delicate.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Delmon Delicate Script";
+  src: url("/fonts/Delmon Delicate-Script.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BwModelica-Medium";
+  src: url("/fonts/BwModelica-Medium.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BwModelica-LightItalic";
+  src: url("/fonts/BwModelica-LightItalic.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BwModelica-Hairline";
+  src: url("/fonts/BwModelica-Hairline.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@layer base {
+  :root {
+    /* Cor primária - azul petróleo elegante */
+    --background: 30 43% 96%;
+    --foreground: 194 73% 10%;
+
+    --card: 30 43% 96%;
+    --card-foreground: 194 73% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 194 73% 10%;
+
+    /* Primária - azul petróleo profundo */
+    --primary: 194 73% 10%;
+    --primary-foreground: 30 43% 96%;
+
+    /* Dourado suave para destaques */
+    --secondary: 32 49% 66%;
+    --secondary-foreground: 194 73% 10%;
+
+    /* Bronze sofisticado */
+    --accent: 286 23% 57%;
+    --accent-foreground: 30 43% 96%;
+
+    /* Tons suaves */
+    --muted: 30 25% 90%;
+    --muted-foreground: 194 40% 35%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 30 43% 96%;
+
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 32 49% 66%;
+
+    --radius: 0.75rem;
+    
+    /* Cores customizadas para o tema */
+    --gold: 32 49% 66%;
+    --gold-dark: 32 49% 56%;
+    --bronze: 286 23% 57%;
+    --bronze-dark: 286 23% 47%;
+    --luxury-bg: 30 43% 96%;
+    
+    /* Gradientes */
+    --gradient-hero: linear-gradient(135deg, hsl(194 73% 10% / 0.95), hsl(194 73% 15% / 0.85));
+    --gradient-gold: linear-gradient(135deg, hsl(32 49% 66%), hsl(32 49% 56%));
+    --gradient-overlay: linear-gradient(180deg, transparent, hsl(194 73% 10% / 0.8));
+    
+    /* Sombras elegantes */
+    --shadow-soft: 0 4px 24px hsl(194 73% 10% / 0.06);
+    --shadow-medium: 0 8px 32px hsl(194 73% 10% / 0.12);
+    --shadow-gold: 0 8px 24px hsl(32 49% 66% / 0.25);
+    
+    /* Transições suaves */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 194 73% 10%;
+    --foreground: 30 43% 96%;
+
+    --card: 194 60% 12%;
+    --card-foreground: 30 43% 96%;
+
+    --popover: 194 60% 12%;
+    --popover-foreground: 30 43% 96%;
+
+    --primary: 30 43% 96%;
+    --primary-foreground: 194 73% 10%;
+
+    --secondary: 32 49% 66%;
+    --secondary-foreground: 194 73% 10%;
+
+    --accent: 286 23% 57%;
+    --accent-foreground: 30 43% 96%;
+
+    --muted: 194 50% 15%;
+    --muted-foreground: 30 25% 70%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 30 43% 96%;
+
+    --border: 194 40% 20%;
+    --input: 194 40% 20%;
+    --ring: 32 49% 66%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+.marmore-verde {
+  width: 100%;
+  min-height: 100vh;
+
+  background:
+    /* VEIOS DOURADOS */
+    repeating-linear-gradient(
+      120deg,
+      rgba(255, 215, 0, 0.4) 0px,
+      rgba(255, 215, 0, 0.4) 2px,
+      transparent 3px,
+      transparent 90px
+    ),
+    repeating-linear-gradient(
+      60deg,
+      rgba(255, 215, 0, 0.2) 0px,
+      rgba(255, 215, 0, 0.2) 1px,
+      transparent 2px,
+      transparent 120px
+    ),
+
+    /* EFEITO DE ROCHA / MÁRMORE */
+    linear-gradient(135deg, #022b25, #00322b 30%, #01221c 60%, #001813),
+
+    /* TEXTURA DE RUÍDO */
+    url("data:image/svg+xml;utf8,\
+    <svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>\
+    <filter id='noise'>\
+      <feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='5'/>\
+    </filter>\
+    <rect width='100%' height='100%' filter='url(%23noise)' opacity='0.25'/>\
+    </svg>");
+
+  background-blend-mode: overlay, overlay, normal, multiply;
+
+  animation: marmoreMove 20s ease-in-out infinite alternate;
+}
+
+@keyframes marmoreMove {
+  0% {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 200px 150px, -150px 200px, 100px -100px, 0 0;
+  }
+}
+@keyframes slideUpMobile {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 10;
+  }
+}
+
+.animate-slide-up-mobile {
+  animation: slideUpMobile 0.45s cubic-bezier(0.25, 0.95, 0.35, 1.2);
+}
