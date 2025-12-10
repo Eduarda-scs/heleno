@@ -668,7 +668,7 @@ const PropertyDetails = () => {
 
                 <Button variant="gold" size="lg" className="w-full" asChild>
                   <a
-                    href={`https://wa.me/${property.whatsapp}`}
+                    href={`https://wa.me/${property.whatsapp}?text=Olá, venho do seu site tenho interesse no imóvel ${property.titulo}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
