@@ -87,29 +87,23 @@ export default function CadastroImoveis() {
 
   async function carregarImoveis() {
     try {
-      console.log("[CadastroImoveis] 🔄 Carregando imóveis...");
       const retorno: WebhookResponse[] | null = await getPropertyFromWebhook();
-      console.log("[CadastroImoveis] 📌 Retorno recebido:", retorno);
 
       if (retorno && retorno.length > 0) {
         if (retorno[0].properties) {
           setImoveis(retorno[0].properties);
-          console.log(`[CadastroImoveis] ✅ ${retorno[0].properties.length} imóveis carregados`);
         } else {
           setImoveis([]);
-          console.log("[CadastroImoveis] ⚠️ Nenhuma propriedade encontrada");
         }
 
         if (retorno[0].amenities) {
           setAmenities(retorno[0].amenities);
-          console.log(`[CadastroImoveis] ✅ ${retorno[0].amenities.length} amenities carregadas`);
         } else {
           setAmenities([]);
         }
 
         if (retorno[0].categories) {
           setCategories(retorno[0].categories);
-          console.log(`[CadastroImoveis] ✅ ${retorno[0].categories.length} categorias carregadas`);
         } else {
           setCategories([]);
         }
@@ -117,7 +111,6 @@ export default function CadastroImoveis() {
         setImoveis([]);
         setAmenities([]);
         setCategories([]);
-        console.log("[CadastroImoveis] ⚠️ Retorno vazio ou nulo");
       }
     } catch (error) {
       console.error("[CadastroImoveis] ❌ Erro ao carregar imóveis:", error);
@@ -130,7 +123,6 @@ export default function CadastroImoveis() {
     // Aguarda um pequeno delay para garantir que a UI foi renderizada
     const timer = setTimeout(() => {
       if (!isInitialized) {
-        console.log("[CadastroImoveis] 🚀 Iniciando carregamento após renderização...");
         carregarImoveis();
       }
     }, 100); // Delay de 100ms para garantir renderização completa
@@ -151,7 +143,6 @@ export default function CadastroImoveis() {
   };
 
   const confirmarExclusao = async () => {
-    console.log(`[CadastroImoveis] 🗑️ Excluindo ${selecionados.length} imóveis...`);
     
     for (const propertyId of selecionados) {
       await removeProperty(propertyId);
@@ -165,7 +156,6 @@ export default function CadastroImoveis() {
     await carregarImoveis();
     setConfirmDelete(false);
     
-    console.log(`[CadastroImoveis] ✅ ${selecionados.length} imóveis excluídos`);
   };
 
   const handleAbrirDetalhes = (imovel: Property) => {
