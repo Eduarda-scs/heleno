@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense, lazy } from "react";
 // LAZY LOAD PARA REDUZIR A CADEIA CRÍTICA
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 
 // IMPORTAÇÃO SUPER LEVE DOS ÍCONES DO LUCIDE (SEM TRAZER A LIB INTEIRA)
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
@@ -249,6 +250,9 @@ export default function City() {
       {/* SUSPENSE NO FOOTER */}
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
+        <WhatsAppButton />
       </Suspense>
     </div>
   );

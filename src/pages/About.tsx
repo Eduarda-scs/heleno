@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { lazy, Suspense } from "react";
 
+const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 
@@ -257,6 +258,9 @@ const About = () => {
 
       <Suspense fallback={<div>Carregando...</div>}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
+        <WhatsAppButton />
       </Suspense>
     </div>
   );

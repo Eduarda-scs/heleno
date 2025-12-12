@@ -85,6 +85,12 @@ const PropertyDetails = () => {
     
     return null;
   };
+  const formatDescription = (text: string) => {
+    if (!text) return '';
+    
+    // Substituir quebras de linha (\n) por <br />
+    return text.replace(/\n/g, '<br />');
+  };
 
   const convertStorePropertyToComponentFormat = (storeProperty: any) => {
     const fotosArray = storeProperty.images?.map((img: any) => ({
@@ -645,12 +651,16 @@ const PropertyDetails = () => {
                 </div>
               </div>
 
-              {/* DESCRIÇÃO */}
+             {/* DESCRIÇÃO */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold">Descrição</h2>
-                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                  {property.descricao}
-                </p>
+                {/* MODIFICAÇÃO AQUI: Usando dangerouslySetInnerHTML para renderizar HTML */}
+                <div 
+                  className="text-base sm:text-lg text-muted-foreground leading-relaxed whitespace-pre-line"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatDescription(property.descricao) 
+                  }}
+                />
               </div>
 
               {/* DIFERENCIAIS */}

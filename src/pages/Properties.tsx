@@ -5,6 +5,7 @@ import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 // Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -41,7 +42,6 @@ const Properties = () => {
   // Função para carregar propriedades
   const loadProperties = async () => {
     try {
-      console.log("[Properties] 🔄 Carregando propriedades...");
       const data = await getPropertyFromWebhook();
       
       // A estrutura retornada é um array, então precisamos extrair os dados do primeiro item
@@ -50,14 +50,11 @@ const Properties = () => {
     
         setAllProperties(clientData.properties || []);
         setPropertyTypes(clientData.property_types || []);
-        console.log(`[Properties] ✅ ${clientData.properties?.length || 0} propriedades carregadas`);
       } else {
-        console.log("[Properties] ⚠️ Retorno vazio ou nulo");
         setAllProperties([]);
         setPropertyTypes([]);
       }
     } catch (error) {
-      console.error("[Properties] ❌ Erro ao carregar propriedades:", error);
       setAllProperties([]);
       setPropertyTypes([]);
     } finally {
@@ -70,7 +67,6 @@ const Properties = () => {
     // Aguarda um pequeno delay para garantir que a UI foi renderizada
     const timer = setTimeout(() => {
       if (!isInitialized) {
-        console.log("[Properties] 🚀 Iniciando carregamento após renderização...");
         loadProperties();
       }
     }, 100); // Delay de 100ms para garantir renderização completa
@@ -435,6 +431,9 @@ const Properties = () => {
 
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
+        <WhatsAppButton />
       </Suspense>
     </div>
   );

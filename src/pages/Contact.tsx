@@ -16,6 +16,7 @@ import { toast } from "sonner";
 // Lazy Load components
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 
 // ⬇⬇ API C2S
 import { createLeadC2S } from "@/components/c2sapi";
@@ -294,6 +295,9 @@ ${formData.message}
       {/* Suspense Loading do Footer */}
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
+        <WhatsAppButton />
       </Suspense>
     </div>
   );

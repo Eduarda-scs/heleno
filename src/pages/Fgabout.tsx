@@ -16,6 +16,7 @@ import {
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer =  lazy(() => import("@/components/Footer"));
+const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 
 
 import { getEmpresasHeleno } from "@/components/supabaseActions";
@@ -476,6 +477,9 @@ export default function AboutFG() {
 
       <Suspense fallback={<div className="h-32 w-full"></div>}>
           <Footer />
+        </Suspense>
+        <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
+          <WhatsAppButton />
         </Suspense>
     </div>
   );

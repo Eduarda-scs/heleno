@@ -2,6 +2,9 @@ import React, { Suspense, lazy, useEffect, useRef, useState, memo } from "react"
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
+
+const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
+
 // Lazy Components (carregam apenas quando precisam)
 const Footer = lazy(() => import("@/components/Footer"));
 const FeaturedProperties = lazy(() => import("./FeaturedProperties"));
@@ -237,9 +240,13 @@ const Index: React.FC = () => {
         </div>
       </section>
 
+
       {/* FOOTER */}
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
+        <WhatsAppButton />
       </Suspense>
     </div>
   );
