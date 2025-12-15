@@ -18,6 +18,8 @@ import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { getPropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 import { useToast } from "@/components/ui/use-toast";
 
+
+
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 
@@ -430,7 +432,7 @@ const PropertyDetails = () => {
         <Suspense fallback={<div className="h-20 bg-background" />}>
           <Footer />
         </Suspense>
-      </div>
+      </div> 
     );
   }
 
@@ -443,8 +445,8 @@ const PropertyDetails = () => {
   ];
 
   // Para mobile: mostrar apenas 2 fotos principais + botão "ver mais"
-  const visibleGalleryMobile = gallery.slice(0, 2);
-  const hasMoreMediaMobile = gallery.length > 2;
+  const visibleGalleryMobile = gallery.slice(0, 4);
+  const hasMoreMediaMobile = gallery.length > 4;
 
   // Para desktop: mostrar 4 fotos
   const visibleGalleryDesktop = gallery.slice(0, 4);
@@ -563,50 +565,51 @@ const PropertyDetails = () => {
                   </button>
                 </div>
 
-                {/* GALERIA MOBILE - Layout 2 fotos + botão "ver mais" */}
+                {/* GALERIA MOBILE — 4 mídias fixas */}
                 <div className="sm:hidden">
-                  <div className="grid grid-cols-2 gap-3">
-                    {visibleGalleryMobile.map((item: any, index: number) => (
-                      <div
-                        key={index}
-                        onClick={() => openLightbox(index)}
-                        className="relative overflow-hidden rounded-lg cursor-pointer group aspect-square"
-                      >
-                        {item.type === "image" ? (
-                          <img
-                            src={item.url}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                            alt={`Imagem ${index + 1} do imóvel`}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <video
-                            src={item.url}
-                            className="w-full h-full object-cover"
-                            muted
-                            playsInline
-                          />
-                        )}
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 grid-rows-2 gap-3">
+                    {visibleGalleryMobile.map((item: any, index: number) => {
+                      const isLast = index === 3 && hasMoreMediaMobile;
 
-                    {/* BOTÃO "VER MAIS" PARA MOBILE */}
-                    {hasMoreMediaMobile && (
-                      <div
-                        onClick={() => openLightbox(2)}
-                        className="relative overflow-hidden rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 transition-colors aspect-square flex flex-col items-center justify-center border-2 border-dashed border-gray-300"
-                      >
-                        <div className="text-center p-4">
-                          <Plus className="w-8 h-8 text-gray-400 mb-2 mx-auto" />
-                          <p className="text-sm font-medium text-gray-700">Ver mais</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            +{gallery.length - 2} mídias
-                          </p>
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => openLightbox(index)}
+                          className="relative overflow-hidden rounded-lg cursor-pointer group aspect-square"
+                        >
+                          {item.type === "image" ? (
+                            <img
+                              src={item.url}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              alt={`Imagem ${index + 1} do imóvel`}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <video
+                              src={item.url}
+                              className="w-full h-full object-cover"
+                              muted
+                              playsInline
+                            />
+                          )}
+
+                          {isLast && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <div className="text-center">
+                                <Plus className="w-8 h-8 text-white mb-1 mx-auto" />
+                                <p className="text-white text-lg font-semibold">
+                                  +{gallery.length - 4}
+                                </p>
+                                <p className="text-white/80 text-xs">Ver mais</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
                 </div>
+
 
                 {/* GALERIA DESKTOP */}
                 <div className="hidden sm:block">
@@ -804,6 +807,25 @@ const PropertyDetails = () => {
                 />
               )}
             </div>
+            {/* INDICADOR DE NAVEGAÇÃO MOBILE */}
+            {isMobile && gallery.length > 1 && (
+              <>
+                {/* SETA ESQUERDA */}
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                  <div className="bg-black/40 backdrop-blur-md rounded-full p-2 animate-pulse">
+                    <ArrowLeft className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+
+                {/* SETA DIREITA */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                  <div className="bg-black/40 backdrop-blur-md rounded-full p-2 animate-pulse rotate-180">
+                    <ArrowLeft className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+              </>
+            )}
+
 
             {/* ZONAS DE TOQUE MOBILE */}
             {isMobile && (
