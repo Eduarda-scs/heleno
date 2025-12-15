@@ -31,8 +31,8 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email",
-    info: "helenoalves.apves@gmail.com",
-    link: "mailto:helenohapastasdocs@gmail.com",
+    info: "helenoalves.alves@gmail.com",
+    link: "mailto:helenoalves.alves@gmail.com",
   },
   {
     icon: MapPin,
