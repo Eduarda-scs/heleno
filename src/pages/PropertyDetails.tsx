@@ -18,6 +18,13 @@ import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { getPropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 import { useToast } from "@/components/ui/use-toast";
 
+type MediaType = "image" | "video";
+type MediaTab = "fotos" | "videos";
+
+type MediaItem = {
+  type: MediaType;
+  url: string;
+};
 
 
 const Header = lazy(() => import("@/components/Header"));
@@ -32,6 +39,8 @@ const PropertyDetails = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [lightboxClosing, setLightboxClosing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [activeMediaTab, setActiveMediaTab] = useState<MediaTab>("fotos");
+
   
   const { toast } = useToast();
 
@@ -438,11 +447,16 @@ const PropertyDetails = () => {
 
   const heroImage = property.fotos[0]?.url || "";
 
-  const gallery = [
+  const fotosGallery: MediaItem[] = [
     ...(heroImage ? [{ type: "image", url: heroImage }] : []),
-    ...property.fotos.slice(1),
-    ...property.videos,
+    ...(property.fotos || []).slice(1),
   ];
+  
+  const videosGallery: MediaItem[] = property.videos || [];
+  
+  const gallery: MediaItem[] =
+    activeMediaTab === "fotos" ? fotosGallery : videosGallery;
+  
 
   // Para mobile: mostrar apenas 2 fotos principais + botão "ver mais"
   const visibleGalleryMobile = gallery.slice(0, 4);
@@ -550,6 +564,39 @@ const PropertyDetails = () => {
                   </div>
                 )}
               </div>
+              {/* TABS DE MÍDIA */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setActiveMediaTab("fotos");
+                    setLightboxIndex(0);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    activeMediaTab === "fotos"
+                      ? "bg-black text-white"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Fotos ({fotosGallery.length})
+                </button>
+
+                {videosGallery.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setActiveMediaTab("videos");
+                      setLightboxIndex(0);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      activeMediaTab === "videos"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    Vídeos ({videosGallery.length})
+                  </button>
+                )}
+              </div>
+
 
               {/* GALERIA - MOBILE E DESKTOP SEPARADOS */}
               <div className="space-y-4">

@@ -21,7 +21,6 @@ const PropertyDetails = lazy(() => import("./pages/PropertyDetails"));
 const About = lazy(() => import("./pages/About"));
 const AboutFG = lazy(() => import("./pages/Fgabout"));
 const Contact = lazy(() => import("./pages/Contact"));
-const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PoliticasCookies = lazy(() => import("./pages/PoliticasCookies"));
@@ -65,7 +64,6 @@ const AppRoutes = () => {
         <Route path="/fgabout" element={<AboutFG />} />
         <Route path="/sobre" element={<About />} />
         <Route path="/contato" element={<Contact />} />
-        <Route path="/login" element={<Login />} />
         <Route path="/empreendimentos" element={<Properties />} />
         <Route path="empreendimento/:id" element={<PropertyDetails />} />
         <Route path="/politicacokies" element={<PoliticasCookies />} />
