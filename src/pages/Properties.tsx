@@ -181,23 +181,7 @@ const Properties = () => {
           </div>
         </section>
 
-        {/* FILTROS - Versão loading */}
-        <section className="py-8 bg-luxury-bg border-b border-border">
-          <div className="container mx-auto px-4 lg:px-8">
-            <div className="flex flex-wrap gap-3 justify-center font-bwmodelica">
-              {["Todos", "Na Planta", "Pronto", "Luxo", "Frente Mar"].map((filter) => (
-                <Button
-                  key={filter}
-                  variant="outline"
-                  disabled
-                  className="transition-all duration-300 opacity-50"
-                >
-                  {filter}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </section>
+      
 
         {/* CONTEÚDO LOADING */}
         <section className="py-16 bg-background">
