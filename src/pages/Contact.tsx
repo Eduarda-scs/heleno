@@ -25,9 +25,16 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Telefone",
-    info: "(47) 99263-9593",
-    link: "tel:+554792639593",
+    info: [
+      "(47) 99263-9593",
+      "(85) 98808-5349",
+    ],
+    links: [
+      "https://wa.me/5547992639593?text=Olá, venho do seu site tenho interesse no imóvel",
+      "https://wa.me/558588085349?text=Olá, venho do seu site tenho interesse no imóvel",
+    ],
   },
+  
   {
     icon: Mail,
     title: "Email",
@@ -150,24 +157,44 @@ ${formData.message}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {contactInfo.map((item, index) => {
               const Icon = item.icon;
+
               return (
-                <a
+                <div
                   key={index}
-                  href={item.link}
                   className="group bg-card p-6 rounded-xl shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-gold)] transition-all duration-300 hover:-translate-y-1 animate-fade-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <Icon className="w-8 h-8 text-secondary mb-3 group-hover:scale-110 transition-transform" />
-                  <h3 className="font-semibold text-foreground mb-1">
+
+                  <h3 className="font-semibold text-foreground mb-2">
                     {item.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{item.info}</p>
-                </a>
+
+                  {/* INFOS */}
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    {Array.isArray(item.info) ? (
+                      item.info.map((text, i) => (
+                        <a
+                          key={i}
+                          href={item.links?.[i]}
+                          className="hover:underline"
+                        >
+                          {text}
+                        </a>
+                      ))
+                    ) : (
+                      <a href={item.link} className="hover:underline">
+                        {item.info}
+                      </a>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
         </div>
       </section>
+
 
       {/* Form Section */}
       <section className="py-20 bg-background">
