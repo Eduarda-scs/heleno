@@ -77,7 +77,7 @@ const Properties = () => {
   // Obter filtros dos property_types
   const filters = propertyTypes.length > 0
     ? ["Todos", ...propertyTypes.map(type => type.property_type_name)]
-    : ["Todos", "Na Planta", "Pronto", "Luxo", "Frente Mar"];
+    : [];
 
   // Converter dados para o formato esperado pelo PropertyCard
   const parsedProperties = allProperties.map((property) => {
