@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
+import { generateSlug } from "@/utils/slug"
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -83,18 +84,22 @@ const Properties = () => {
   const parsedProperties = allProperties.map((property) => {
     const firstImage = property.images?.[0]?.url || "";
     const propertyTypes = property.property_types || [];
-    
+  
+    const slug = generateSlug(property.property_title || "");
+  
     return {
       id: property.id.toString(),
+      slug, // 👈 AQUI
       title: property.property_title || "Sem título",
       location: property.property_city || "Localização não informada",
       type: propertyTypes[0]?.property_type_name || "",
       image: firstImage,
       videos: property.videos || [],
       categories: propertyTypes.map(type => type.property_type_name) || [],
-      propertyData: { properties: allProperties, property_types: propertyTypes } // Passa os dados completos
+      propertyData: { properties: allProperties, property_types: propertyTypes }
     };
   });
+  
 
   const filteredProperties = activeFilter === "Todos"
     ? parsedProperties
@@ -118,6 +123,8 @@ const Properties = () => {
       setCurrentPage(currentPage + 1);
     }
   };
+
+  
 
   const goToPrevPage = () => {
     if (currentPage > 1) {

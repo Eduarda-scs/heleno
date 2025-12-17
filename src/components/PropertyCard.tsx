@@ -5,17 +5,20 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface PropertyCardProps {
   id: string;
+  slug: string; // 👈 ADICIONE
   title: string;
   location: string;
   type: string;
   image: string;
   featured?: boolean;
   videos?: any[];
-  propertyData?: any; // Agora passa os dados completos
+  propertyData?: any;
 }
+
 
 export const PropertyCard = ({
   id,
+  slug, // 👈 AQUI
   title,
   location,
   type,
@@ -24,6 +27,7 @@ export const PropertyCard = ({
   videos = [],
   propertyData,
 }: PropertyCardProps) => {
+
   
   const hasImage = image && image !== "";
   const hasVideo = videos.length > 0;
@@ -62,7 +66,7 @@ export const PropertyCard = ({
     <Card className="group overflow-hidden border-border hover:shadow-[var(--shadow-gold)] transition-all duration-300 hover:-translate-y-1">
       <div className="relative overflow-hidden aspect-[4/3]">
         <Link 
-          to={`/empreendimento/${id}`} 
+          to={`/empreendimento/${slug}/${id}`} 
           className="absolute inset-0 z-10 cursor-pointer"
           onClick={handlePropertyClick}
         />
@@ -151,7 +155,7 @@ export const PropertyCard = ({
         </div>
 
         <Button variant="hero" className="w-full group" asChild>
-          <Link to={`/empreendimento/${id}`} onClick={handlePropertyClick}>
+          <Link to={`/empreendimento/${slug}/${id}`} onClick={handlePropertyClick}>
             <span>Ver Detalhes</span>
             <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
           </Link>

@@ -17,6 +17,9 @@ import {
 import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { getPropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 import { useToast } from "@/components/ui/use-toast";
+import { generateSlug } from "@/utils/slug";
+import { useNavigate } from "react-router-dom";
+
 
 type MediaType = "image" | "video";
 type MediaTab = "fotos" | "videos";
@@ -31,7 +34,7 @@ const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 
 const PropertyDetails = () => {
-  const { id } = useParams();
+  const { id, slug  } = useParams();
   const [property, setProperty] = useState<any>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -46,6 +49,21 @@ const PropertyDetails = () => {
 
   const { currentProperty, clearCurrentProperty } = usePropertyDetailStore();
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!property || !id) return;
+
+    const correctSlug = generateSlug(property.titulo);
+
+    if (slug !== correctSlug) {
+      navigate(
+        `/empreendimento/${correctSlug}/${id}`,
+        { replace: true }
+      );
+    }
+  }, [property, slug, id, navigate]);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -57,8 +75,12 @@ const PropertyDetails = () => {
   }, []);
 
   const handleShare = () => {
-    const currentUrl = window.location.href;
-    navigator.clipboard.writeText(currentUrl).then(() => {
+    if (!property) return;
+  
+    const slug = generateSlug(property.titulo);
+    const url = `${window.location.origin}/empreendimento/${slug}/${property.id}`;
+  
+    navigator.clipboard.writeText(url).then(() => {
       toast({
         title: "Link copiado!",
         description: "O link do imóvel foi copiado para a área de transferência.",
@@ -66,6 +88,7 @@ const PropertyDetails = () => {
       });
     });
   };
+  
 
   useEffect(() => {
     if (!isMobile) return;

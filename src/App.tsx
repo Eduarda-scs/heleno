@@ -65,7 +65,7 @@ const AppRoutes = () => {
         <Route path="/sobre" element={<About />} />
         <Route path="/contato" element={<Contact />} />
         <Route path="/empreendimentos" element={<Properties />} />
-        <Route path="empreendimento/:id" element={<PropertyDetails />} />
+        <Route path="/empreendimento/:slug/:id" element={<PropertyDetails />} />
         <Route path="/politicacokies" element={<PoliticasCookies />} />
         <Route path="/politicaprivacidade" element={<PoliticasPrivacidade />} />
         <Route path="/termodeuso" element={<TermosUso />} />
