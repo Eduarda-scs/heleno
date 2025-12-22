@@ -15,11 +15,9 @@ import {
   Plus,
 } from "lucide-react";
 import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
-import { getPropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
-
 
 type MediaType = "image" | "video";
 type MediaTab = "fotos" | "videos";
@@ -29,12 +27,11 @@ type MediaItem = {
   url: string;
 };
 
-
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 
 const PropertyDetails = () => {
-  const { id, slug  } = useParams();
+  const { id, slug } = useParams();
   const [property, setProperty] = useState<any>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -44,11 +41,8 @@ const PropertyDetails = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<MediaTab>("fotos");
 
-  
   const { toast } = useToast();
-
   const { currentProperty, clearCurrentProperty } = usePropertyDetailStore();
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,10 +51,7 @@ const PropertyDetails = () => {
     const correctSlug = generateSlug(property.titulo);
 
     if (slug !== correctSlug) {
-      navigate(
-        `/empreendimento/${correctSlug}/${id}`,
-        { replace: true }
-      );
+      navigate(`/empreendimento/${correctSlug}/${id}`, { replace: true });
     }
   }, [property, slug, id, navigate]);
 
@@ -68,18 +59,18 @@ const PropertyDetails = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const handleShare = () => {
     if (!property) return;
-  
+
     const slug = generateSlug(property.titulo);
     const url = `${window.location.origin}/empreendimento/${slug}/${property.id}`;
-  
+
     navigator.clipboard.writeText(url).then(() => {
       toast({
         title: "Link copiado!",
@@ -88,7 +79,6 @@ const PropertyDetails = () => {
       });
     });
   };
-  
 
   useEffect(() => {
     if (!isMobile) return;
@@ -96,81 +86,71 @@ const PropertyDetails = () => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const maxScroll = 200;
-      const progress = Math.max(0.5, 1 - (scrollY / maxScroll));
-      
+      const progress = Math.max(0.5, 1 - scrollY / maxScroll);
+
       setScrollProgress(progress);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [isMobile]);
 
-  const findPropertyInWebhookData = (webhookData: any, propertyId: string | undefined) => {
-    if (!webhookData || !propertyId) return null;
-
-    for (const propertyType of webhookData) {
-      if (propertyType.properties) {
-        const foundProperty = propertyType.properties.find(
-          (prop: any) => prop.id.toString() === propertyId
-        );
-        if (foundProperty) return foundProperty;
-      }
-    }
-    
-    return null;
-  };
   const formatDescription = (text: string) => {
-    if (!text) return '';
-    
-    // Substituir quebras de linha (\n) por <br />
-    return text.replace(/\n/g, '<br />');
+    if (!text) return "";
+
+    return text.replace(/\n/g, "<br />");
   };
 
-  const convertStorePropertyToComponentFormat = (storeProperty: any) => {
-    const fotosArray = storeProperty.images?.map((img: any) => ({
-      type: "image",
-      url: img.url,
-    })) || [];
+  const convertWebhookPropertyToComponentFormat = (webhookProperty: any) => {
+    const fotosArray =
+      webhookProperty.images?.map((img: any) => ({
+        type: "image",
+        url: img.url,
+      })) || [];
 
-    const videosArray = storeProperty.videos?.map((video: any) => ({
-      type: "video",
-      url: video.url,
-    })) || [];
+    const videosArray =
+      webhookProperty.videos?.map((video: any) => ({
+        type: "video",
+        url: video.url,
+      })) || [];
 
-    const caracteristicasArray = storeProperty.amenities?.map((amenity: any) => 
-      amenity.amenity_name || ''
-    ).filter(Boolean) || [];
+    const caracteristicasArray =
+      webhookProperty.categories
+        ?.map((category: any) => category.category_name || "")
+        .filter(Boolean) || [];
 
-    const propertyTypesArray = storeProperty.property_types?.map((type: any) => 
-      type.property_type_name || ''
-    ).filter(Boolean) || [];
+    const propertyTypesArray =
+      webhookProperty.property_types
+        ?.map((type: any) => type.property_type_name || "")
+        .filter(Boolean) || [];
 
-    const categoriesArray = storeProperty.categories?.map((category: any) => 
-      category.category_name || ''
-    ).filter(Boolean) || [];
+    const amenitiesArray =
+      webhookProperty.amenities
+        ?.map((amenity: any) => amenity.amenity_name || "")
+        .filter(Boolean) || [];
 
     return {
-      id: storeProperty.id,
-      titulo: storeProperty.property_title,
-      descricao: storeProperty.property_detail,
-      cidade: storeProperty.property_city,
-      bairro: storeProperty.property_neighborhood,
-      rua: storeProperty.property_street,
-      numero: storeProperty.property_street_number,
-      cep: storeProperty.property_postal_code,
-      valor: storeProperty.property_price,
-      valor_negociacao: storeProperty.property_negociation_price,
-      valor_condominio: storeProperty.property_condo_price,
-      valor_locacao: storeProperty.property_rental_price,
-      quartos: storeProperty.property_bedrooms,
-      banheiros: storeProperty.property_bathrooms,
-      metros: storeProperty.property_area_sqm,
-      vagas: storeProperty.property_garage_spaces,
-      tipo: storeProperty.property_types?.[0]?.property_type_name || "Imóvel",
+      id: webhookProperty.id,
+      titulo: webhookProperty.property_title,
+      descricao: webhookProperty.property_detail,
+      cidade: webhookProperty.property_city,
+      bairro: webhookProperty.property_neighborhood,
+      rua: webhookProperty.property_street,
+      numero: webhookProperty.property_street_number,
+      cep: webhookProperty.property_postal_code,
+      valor: webhookProperty.property_price,
+      valor_negociacao: webhookProperty.property_negociation_price,
+      valor_condominio: webhookProperty.property_condo_price,
+      valor_locacao: webhookProperty.property_rental_price,
+      quartos: webhookProperty.property_bedrooms,
+      banheiros: webhookProperty.property_bathrooms,
+      metros: webhookProperty.property_area_sqm,
+      vagas: webhookProperty.property_garage_spaces,
+      tipo: webhookProperty.property_types?.[0]?.property_type_name || "Imóvel",
       caracteristicas: caracteristicasArray,
       property_types: propertyTypesArray,
-      categories: categoriesArray,
-      amenities: caracteristicasArray,
+      categories: caracteristicasArray,
+      amenities: amenitiesArray,
       fotos: fotosArray,
       videos: videosArray,
       whatsapp: "554792639593",
@@ -182,30 +162,51 @@ const PropertyDetails = () => {
     try {
       console.log(`[PropertyDetails] 🔄 Buscando imóvel ID: ${id}`);
 
-      if (currentProperty && currentProperty.id.toString() === id) {
+      const uniquePropertyDataStr = localStorage.getItem("uniquePropertyData");
+
+      if (uniquePropertyDataStr) {
+        try {
+          const uniquePropertyData = JSON.parse(uniquePropertyDataStr);
+          console.log("[PropertyDetails] ✅ Dados encontrados do webhook/uniqueITEM:", uniquePropertyData);
+
+          if (uniquePropertyData.id?.toString() === id) {
+            const convertedProperty = convertWebhookPropertyToComponentFormat(uniquePropertyData);
+            setProperty(convertedProperty);
+            localStorage.removeItem("uniquePropertyData");
+            return;
+          }
+        } catch (e) {
+          console.error("[PropertyDetails] ❌ Erro ao parsear uniquePropertyData:", e);
+        }
+      }
+
+      const currentPropertyStr = localStorage.getItem("currentProperty");
+      if (currentPropertyStr) {
+        try {
+          const currentPropertyData = JSON.parse(currentPropertyStr);
+          console.log("[PropertyDetails] ✅ Dados encontrados do localStorage:", currentPropertyData);
+
+          if (currentPropertyData.id?.toString() === id) {
+            const convertedProperty = convertWebhookPropertyToComponentFormat(currentPropertyData);
+            setProperty(convertedProperty);
+            return;
+          }
+        } catch (e) {
+          console.error("[PropertyDetails] ❌ Erro ao parsear currentProperty:", e);
+        }
+      }
+
+      if (currentProperty && currentProperty.id?.toString() === id) {
         console.log(`[PropertyDetails] ✅ Encontrado no store: ${currentProperty.property_title}`);
-        
-        const storeProperty = convertStorePropertyToComponentFormat(currentProperty);
-        setProperty(storeProperty);
+        const convertedProperty = convertWebhookPropertyToComponentFormat(currentProperty);
+        setProperty(convertedProperty);
         return;
       }
 
-      console.log(`[PropertyDetails] 🔍 Não encontrado no store, buscando via webhook...`);
-
-      const webhookData = await getPropertyFromWebhook();
-      
-      const foundProperty = findPropertyInWebhookData(webhookData, id);
-      
-      if (foundProperty) {
-        console.log(`[PropertyDetails] ✅ Encontrado via webhook: ${foundProperty.property_title}`);
-        const convertedProperty = convertStorePropertyToComponentFormat(foundProperty);
-        setProperty(convertedProperty);
-      } else {
-        console.log(`[PropertyDetails] ❌ Imóvel não encontrado nos dados do webhook`);
-        setProperty(null);
-      }
-    } catch (webhookError) {
-      console.error("[PropertyDetails] ❌ Erro ao buscar dados do webhook:", webhookError);
+      console.log(`[PropertyDetails] ❌ Imóvel não encontrado`);
+      setProperty(null);
+    } catch (error) {
+      console.error("[PropertyDetails] ❌ Erro ao buscar imóvel:", error);
       setProperty(null);
     } finally {
       setIsInitialized(true);
@@ -234,7 +235,7 @@ const PropertyDetails = () => {
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeLightbox = () => {
@@ -242,27 +243,23 @@ const PropertyDetails = () => {
     setTimeout(() => {
       setLightboxOpen(false);
       setLightboxClosing(false);
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }, 300);
   };
 
   const nextMedia = () => {
-    setLightboxIndex((prev) =>
-      prev + 1 < gallery.length ? prev + 1 : 0
-    );
+    setLightboxIndex((prev) => (prev + 1 < gallery.length ? prev + 1 : 0));
   };
 
   const prevMedia = () => {
-    setLightboxIndex((prev) =>
-      prev - 1 >= 0 ? prev - 1 : gallery.length - 1
-    );
+    setLightboxIndex((prev) => (prev - 1 >= 0 ? prev - 1 : gallery.length - 1));
   };
 
   const formatEndereco = () => {
     if (!property) return null;
-    
+
     const { bairro, cidade, rua, numero } = property;
-    
+
     if (!bairro && !cidade && !rua && !numero) {
       return null;
     }
@@ -274,13 +271,13 @@ const PropertyDetails = () => {
     const parts = [];
     if (bairro) parts.push(bairro);
     if (cidade) parts.push(cidade);
-    
-    return parts.join(', ');
+
+    return parts.join(", ");
   };
 
   const renderValores = () => {
     if (!property) return null;
-    
+
     const temVenda = property.valor || property.valor_negociacao;
     const temCondominio = property.valor_condominio;
     const temLocacao = property.valor_locacao;
@@ -295,9 +292,7 @@ const PropertyDetails = () => {
               <p className="text-base md:text-lg text-muted-foreground mb-1">Venda</p>
               <div className="space-y-1">
                 {property.valor && (
-                  <p className="text-2xl md:text-3xl font-bold text-black">
-                    R$ {property.valor}
-                  </p>
+                  <p className="text-2xl md:text-3xl font-bold text-black">R$ {property.valor}</p>
                 )}
                 {property.valor_negociacao && (
                   <p className="text-sm text-muted-foreground">
@@ -334,11 +329,11 @@ const PropertyDetails = () => {
 
   const renderDiferenciais = () => {
     if (!property) return null;
-    
+
     const todosDiferenciais = [
       ...(property.property_types || []),
       ...(property.categories || []),
-      ...(property.amenities || [])
+      ...(property.amenities || []),
     ];
 
     if (todosDiferenciais.length === 0) return null;
@@ -346,7 +341,7 @@ const PropertyDetails = () => {
     return (
       <div>
         <h2 className="text-2xl font-bold mb-4 md:mb-6">Diferenciais</h2>
-        
+
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
           {todosDiferenciais.map((diferencial: string, i: number) => (
             <div key={i} className="flex items-start gap-2">
@@ -464,7 +459,7 @@ const PropertyDetails = () => {
         <Suspense fallback={<div className="h-20 bg-background" />}>
           <Footer />
         </Suspense>
-      </div> 
+      </div>
     );
   }
 
@@ -474,26 +469,20 @@ const PropertyDetails = () => {
     ...(heroImage ? [{ type: "image", url: heroImage }] : []),
     ...(property.fotos || []).slice(1),
   ];
-  
-  const videosGallery: MediaItem[] = property.videos || [];
-  
-  const gallery: MediaItem[] =
-    activeMediaTab === "fotos" ? fotosGallery : videosGallery;
-  
 
-  // Para mobile: mostrar apenas 2 fotos principais + botão "ver mais"
+  const videosGallery: MediaItem[] = property.videos || [];
+
+  const gallery: MediaItem[] = activeMediaTab === "fotos" ? fotosGallery : videosGallery;
+
   const visibleGalleryMobile = gallery.slice(0, 4);
   const hasMoreMediaMobile = gallery.length > 4;
 
-  // Para desktop: mostrar 4 fotos
   const visibleGalleryDesktop = gallery.slice(0, 4);
   const hasMoreMediaDesktop = gallery.length > 4;
 
   const currentMedia = gallery?.[lightboxIndex];
   const enderecoFormatado = formatEndereco();
-  const heroHeight = isMobile 
-    ? `calc(50vh * ${scrollProgress})`
-    : '70vh';
+  const heroHeight = isMobile ? `calc(50vh * ${scrollProgress})` : "70vh";
 
   return (
     <div className="min-h-screen bg-background">
@@ -501,28 +490,26 @@ const PropertyDetails = () => {
         <Header />
       </Suspense>
 
-      {/* HERO */}
-      <section 
+      <section
         className="relative flex items-center justify-center overflow-hidden transition-all duration-300"
-        style={{ 
-          height: heroHeight
+        style={{
+          height: heroHeight,
         }}
       >
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-300"
-          style={{ 
+          style={{
             backgroundImage: `url(${heroImage})`,
-            transform: isMobile ? `scale(${1 + (0.3 * (1 - scrollProgress))})` : 'none'
+            transform: isMobile ? `scale(${1 + 0.3 * (1 - scrollProgress)})` : "none",
           }}
         />
-        <div 
+        <div
           className="absolute inset-0 transition-opacity duration-300"
-          style={{ 
-            backgroundColor: `rgba(0, 0, 0, ${0.7})`
+          style={{
+            backgroundColor: `rgba(0, 0, 0, ${0.7})`,
           }}
         />
 
-        {/* BOTÃO VOLTAR */}
         <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 z-[99999]">
           <Link
             to="/empreendimentos"
@@ -533,7 +520,6 @@ const PropertyDetails = () => {
           </Link>
         </div>
 
-        {/* LOCALIZAÇÃO */}
         {enderecoFormatado && (
           <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 z-[99999]">
             <div className="inline-flex items-center gap-2 bg-black/40 px-3 sm:px-4 py-2 rounded-lg text-white font-medium backdrop-blur-md text-sm sm:text-base max-w-[200px] sm:max-w-none">
@@ -544,22 +530,18 @@ const PropertyDetails = () => {
         )}
       </section>
 
-      {/* CONTEÚDO PRINCIPAL */}
       <div className="py-8 sm:py-12 md:py-16">
         <div className="container mx-auto px-4 sm:px-6 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
-            {/* MAIN CONTENT */}
             <div className="lg:col-span-2 space-y-8 md:space-y-10">
-              {/* TÍTULO E VALORES */}
               <div className="space-y-6">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bwmodelica text-black leading-tight">
                   {property.titulo}
                 </h1>
-                
+
                 {renderValores()}
               </div>
 
-              {/* CARACTERÍSTICAS DO IMÓVEL */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-card p-3 sm:p-4 rounded-lg text-center">
                   <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-black mx-auto mb-2" />
@@ -587,7 +569,7 @@ const PropertyDetails = () => {
                   </div>
                 )}
               </div>
-              {/* TABS DE MÍDIA */}
+
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => {
@@ -595,9 +577,7 @@ const PropertyDetails = () => {
                     setLightboxIndex(0);
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    activeMediaTab === "fotos"
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-700"
+                    activeMediaTab === "fotos" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
                   }`}
                 >
                   Fotos ({fotosGallery.length})
@@ -620,12 +600,10 @@ const PropertyDetails = () => {
                 )}
               </div>
 
-
-              {/* GALERIA - MOBILE E DESKTOP SEPARADOS */}
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <h2 className="text-2xl font-bold">Galeria</h2>
-                  
+
                   <button
                     onClick={handleShare}
                     className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-gray-700 transition w-full sm:w-auto"
@@ -635,7 +613,6 @@ const PropertyDetails = () => {
                   </button>
                 </div>
 
-                {/* GALERIA MOBILE — 4 mídias fixas */}
                 <div className="sm:hidden">
                   <div className="grid grid-cols-2 grid-rows-2 gap-3">
                     {visibleGalleryMobile.map((item: any, index: number) => {
@@ -655,21 +632,14 @@ const PropertyDetails = () => {
                               loading="lazy"
                             />
                           ) : (
-                            <video
-                              src={item.url}
-                              className="w-full h-full object-cover"
-                              muted
-                              playsInline
-                            />
+                            <video src={item.url} className="w-full h-full object-cover" muted playsInline />
                           )}
 
                           {isLast && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                               <div className="text-center">
                                 <Plus className="w-8 h-8 text-white mb-1 mx-auto" />
-                                <p className="text-white text-lg font-semibold">
-                                  +{gallery.length - 4}
-                                </p>
+                                <p className="text-white text-lg font-semibold">+{gallery.length - 4}</p>
                                 <p className="text-white/80 text-xs">Ver mais</p>
                               </div>
                             </div>
@@ -680,8 +650,6 @@ const PropertyDetails = () => {
                   </div>
                 </div>
 
-
-                {/* GALERIA DESKTOP */}
                 <div className="hidden sm:block">
                   <div className="grid grid-cols-2 gap-4">
                     {visibleGalleryDesktop.map((item: any, index: number) => (
@@ -698,22 +666,14 @@ const PropertyDetails = () => {
                             loading="lazy"
                           />
                         ) : (
-                          <video
-                            src={item.url}
-                            className="w-full h-full object-cover"
-                            muted
-                            playsInline
-                          />
+                          <video src={item.url} className="w-full h-full object-cover" muted playsInline />
                         )}
 
-                        {/* Overlay para mostrar +X mídias na última imagem (desktop) */}
                         {index === 3 && hasMoreMediaDesktop && (
                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <div className="text-center">
                               <Plus className="w-8 h-8 text-white mb-2 mx-auto" />
-                              <p className="text-white text-lg font-semibold">
-                                +{gallery.length - 4}
-                              </p>
+                              <p className="text-white text-lg font-semibold">+{gallery.length - 4}</p>
                               <p className="text-white/80 text-sm">Ver mais</p>
                             </div>
                           </div>
@@ -724,23 +684,19 @@ const PropertyDetails = () => {
                 </div>
               </div>
 
-             {/* DESCRIÇÃO */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold">Descrição</h2>
-                {/* MODIFICAÇÃO AQUI: Usando dangerouslySetInnerHTML para renderizar HTML */}
-                <div 
+                <div
                   className="text-base sm:text-lg text-muted-foreground leading-relaxed whitespace-pre-line"
-                  dangerouslySetInnerHTML={{ 
-                    __html: formatDescription(property.descricao) 
+                  dangerouslySetInnerHTML={{
+                    __html: formatDescription(property.descricao),
                   }}
                 />
               </div>
 
-              {/* DIFERENCIAIS */}
               {renderDiferenciais()}
             </div>
 
-            {/* SIDEBAR */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 bg-card p-6 sm:p-8 rounded-xl shadow-[var(--shadow-medium)] space-y-4">
                 <h3 className="text-xl sm:text-2xl font-bold">Interessado?</h3>
@@ -773,7 +729,6 @@ const PropertyDetails = () => {
         <Footer />
       </Suspense>
 
-      {/* CSS PARA ANIMAÇÕES */}
       <style>
         {`
           @keyframes slideUpMobile {
@@ -801,14 +756,12 @@ const PropertyDetails = () => {
         `}
       </style>
 
-      {/* LIGHTBOX */}
       {(lightboxOpen || lightboxClosing) && (
         <div
           className={`fixed inset-0 z-[99999] flex ${
             isMobile ? "items-end" : "items-center"
           } justify-center`}
         >
-          {/* Overlay */}
           <div
             className={`absolute inset-0 bg-black/80 backdrop-blur-sm overlay-fade ${
               lightboxClosing ? "opacity-0" : "opacity-100"
@@ -816,7 +769,6 @@ const PropertyDetails = () => {
             onClick={closeLightbox}
           />
 
-          {/* CONTAINER */}
           <div
             onClick={(e) => e.stopPropagation()}
             className={`
@@ -824,16 +776,9 @@ const PropertyDetails = () => {
               ${isMobile ? "max-h-[85vh] h-[85vh] rounded-t-2xl" : "h-full rounded-lg"}
               bg-black flex items-center justify-center p-4 overflow-hidden
 
-              ${
-                isMobile
-                  ? lightboxClosing
-                    ? "mobile-slide-down"
-                    : "mobile-slide-up"
-                  : ""
-              }
+              ${isMobile ? (lightboxClosing ? "mobile-slide-down" : "mobile-slide-up") : ""}
             `}
           >
-            {/* BOTÃO FECHAR */}
             <button
               className="absolute top-4 right-4 text-white z-20 bg-black/50 rounded-full p-2 backdrop-blur-md hover:bg-black/70 transition-colors"
               onClick={closeLightbox}
@@ -841,7 +786,6 @@ const PropertyDetails = () => {
               <X className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
 
-            {/* NAVEGAÇÃO DESKTOP */}
             {!isMobile && (
               <>
                 <button
@@ -860,7 +804,6 @@ const PropertyDetails = () => {
               </>
             )}
 
-            {/* MÍDIA */}
             <div className="max-w-4xl w-full flex items-center justify-center">
               {currentMedia?.type === "image" ? (
                 <img
@@ -877,17 +820,15 @@ const PropertyDetails = () => {
                 />
               )}
             </div>
-            {/* INDICADOR DE NAVEGAÇÃO MOBILE */}
+
             {isMobile && gallery.length > 1 && (
               <>
-                {/* SETA ESQUERDA */}
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
                   <div className="bg-black/40 backdrop-blur-md rounded-full p-2 animate-pulse">
                     <ArrowLeft className="w-5 h-5 text-white" />
                   </div>
                 </div>
 
-                {/* SETA DIREITA */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
                   <div className="bg-black/40 backdrop-blur-md rounded-full p-2 animate-pulse rotate-180">
                     <ArrowLeft className="w-5 h-5 text-white" />
@@ -896,8 +837,6 @@ const PropertyDetails = () => {
               </>
             )}
 
-
-            {/* ZONAS DE TOQUE MOBILE */}
             {isMobile && (
               <>
                 <div

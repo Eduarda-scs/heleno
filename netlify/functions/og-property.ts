@@ -1,19 +1,17 @@
 import type { Handler } from "@netlify/functions";
 
 export const handler: Handler = async (event) => {
-  const { id, slug } = event.queryStringParameters || {};
+  const path = event.path; 
+  // /empreendimento/condominio-horizontal-praia-brava/127
 
-  // 🔒 Fallback de segurança
-  const safeId = id || "0";
-  const safeSlug = slug || "imovel";
+  const [, , slug, id] = path.split("/");
 
-  // ⚠️ TEMPORÁRIO (depois ligamos na API real)
+  // ⚠️ imagem PRECISA ser jpg ou png
   const property = {
-    id: safeId,
     title: "Apartamento Frente Mar em Balneário Camboriú",
     description: "Imóvel de alto padrão em Balneário Camboriú. Confira fotos, valores e detalhes.",
-    image: "https://helenoalvesbc.com.br/opt-empreendimentos.webp",
-    url: `https://helenoalvesbc.com.br/empreendimento/${safeSlug}/${safeId}`,
+    image: "https://picsum.photos/1200/630.jpg",
+    url: `https://helenoalvesbc.com.br${path}`,
   };
 
   const html = `<!DOCTYPE html>
@@ -30,6 +28,8 @@ export const handler: Handler = async (event) => {
 
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+
+<meta http-equiv="refresh" content="0;url=${property.url}" />
 </head>
 <body></body>
 </html>`;
@@ -37,8 +37,7 @@ export const handler: Handler = async (event) => {
   return {
     statusCode: 200,
     headers: {
-      "Content-Type": "text/html; charset=UTF-8",
-      "Cache-Control": "public, max-age=300", // cache leve (5 min)
+      "Content-Type": "text/html",
     },
     body: html,
   };
