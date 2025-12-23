@@ -186,20 +186,13 @@ const Index: React.FC = () => {
       </section>
 
       {/* FEATURED PROPERTIES */}
-      <div ref={featuredRef} className="py-8 bg-white">
-        {isPropertiesLoading && (
-          <div className="py-12 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#d2ab80] border-t-transparent mx-auto mb-4" />
-            <p className="text-[#07262d] font-bwmodelica">Carregando empreendimentos em destaque...</p>
-          </div>
-        )}
-
-        {shouldLoadFeatured && (
-          <Suspense fallback={<div className="py-20 text-center">Carregando...</div>}>
-            <FeaturedProperties />
-          </Suspense>
-        )}
-      </div>
+      
+        
+      <Suspense >
+        <FeaturedProperties />
+      </Suspense>
+        
+      
 
       {/* SOBRE */}
       <section className="py-16 bg-[#f9f5f3]">
