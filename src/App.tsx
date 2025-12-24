@@ -22,7 +22,6 @@ const About = lazy(() => import("./pages/About"));
 const AboutFG = lazy(() => import("./pages/Fgabout"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Blog = lazy(() => import("./pages/Blog"));
 
 const PoliticasCookies = lazy(() => import("./pages/PoliticasCookies"));
 const PoliticasPrivacidade = lazy(() => import("./pages/politicaprivacidade"));
@@ -70,7 +69,6 @@ const AppRoutes = () => {
         <Route path="/politicacokies" element={<PoliticasCookies />} />
         <Route path="/politicaprivacidade" element={<PoliticasPrivacidade />} />
         <Route path="/termodeuso" element={<TermosUso />} />
-        <Route path="/Blog" element={<Blog />} />
 
         {/* ROTAS PROTEGIDAS */}
         <Route
