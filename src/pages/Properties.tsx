@@ -226,22 +226,30 @@ const parsedProperties = filteredProperties.map((property) => {
 
         {/* HERO - Versão simplificada para loading */}
         <section className="relative h-[65vh] flex items-center justify-center overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url("/opt-empreendimentos.webp")` }}
-          />
-          <div className="absolute inset-0 bg-primary/70" />
+          <div className="absolute inset-0">
+            <img
+              src="/opt-empreendimentos.webp"
+              alt="Banner Opt Empreendimentos"
+              className="w-full h-full object-cover"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </div>
+
+          {/* 🔑 ISSO resolve a cor estranha */}
+          <div className="absolute inset-0 bg-black/40" />
 
           <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
-            <h1 className="text-3xl md:text-6xl font-bwmodelicaLightItalic mb-4 md:mb-6">
+            <h1 className="text-3xl md:text-6xl font-bwmodelicaLightItalic mb-4">
               Nossos <span className="text-secondary">Empreendimentos</span>
             </h1>
 
-            <p className="text-base md:text-2xl text-primary-foreground/90 max-w-3xl mx-auto font-bwmodelica">
+            <p className="text-base md:text-2xl text-primary-foreground/90">
               Encontre o imóvel perfeito para você em Balneário Camboriú
             </p>
           </div>
         </section>
+
 
         {/* CONTEÚDO LOADING */}
         <section className="py-16 bg-background">
@@ -274,23 +282,26 @@ const parsedProperties = filteredProperties.map((property) => {
       {/* HERO */}
       <section className="relative h-[65vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src="/opt-empreendimentos.webp"
-            alt="Banner Opt Empreendimentos"
-            fetchpriority="high"
-            decoding="async"
-            className="w-full h-full object-cover"
-          />
-        </div>
+            <img
+              src="/opt-empreendimentos.webp"
+              alt="Banner Opt Empreendimentos"
+              className="w-full h-full object-cover"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </div>
 
-        <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground animate-fade-up">
-          <h1 className="text-3xl md:text-6xl font-bwmodelicaLightItalic mb-4 md:mb-6">
-            Nossos <span className="text-secondary">Empreendimentos</span>
-          </h1>
+          {/* 🔑 ISSO resolve a cor estranha */}
+          <div className="absolute inset-0 bg-black/40" />
 
-          <p className="text-base md:text-2xl text-primary-foreground/90 max-w-3xl mx-auto font-bwmodelica">
-            Encontre o imóvel perfeito para você em Balneário Camboriú
-          </p>
+          <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
+            <h1 className="text-3xl md:text-6xl font-bwmodelicaLightItalic mb-4">
+              Nossos <span className="text-secondary">Empreendimentos</span>
+            </h1>
+
+            <p className="text-base md:text-2xl text-primary-foreground/90">
+              Encontre o imóvel perfeito para você em Balneário Camboriú
+            </p>
           
           {/* Contador de propriedades */}
           <div className="mt-6 text-sm md:text-base text-primary-foreground/80">
