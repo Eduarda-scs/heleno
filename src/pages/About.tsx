@@ -26,7 +26,7 @@ const mediaHighlights = [
   {
     id: 2,
     title:
-      "O nome que redefine o mercado imobiliário de luxo no Brasil, Heleno Alves",
+      "Heleno Alves: O novo nome que está transformando o mercado imobiliário de luxo em Balneário Camboriú",
     source: "Look Magazine",
     image:
       "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
@@ -40,6 +40,187 @@ const mediaHighlights = [
     image:
       "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
     link: "https://correiodealagoas.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 4,
+    title:
+      "Como Heleno Alves está redefinindo o mercado de imóveis de alto padrão em BC",
+    source: "Correio de Pará",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://correiodopara.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 5,
+    title:
+      "O impacto de Heleno Alves no setor imobiliário de alto padrão catarinense",
+    source: "Jornal do Recife",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://jornaldorecife.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 6,
+    title:
+      "Heleno Alves: Conectando investidores e imóveis de luxo em Balneário Camboriú",
+    source: "Sucess Magazine",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://successmagazine.com.br/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 7,
+    title:
+      "Por dentro da atuação de Heleno Alves no mercado premium de Balneário Camboriú",
+    source: "Isto É Negócios",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://istoenegocios.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 8,
+    title:
+      "Balneário Camboriú recebe Heleno Alves para revolucionar o mercado imobiliário de luxo",
+    source: "Business of Fashion",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://businessoffashion.com.br/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 9,
+    title:
+      "Heleno Alves e sua visão estratégica para o alto padrão imobiliário no Brasil",
+    source: "Handelsblatt",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://handelsblatt.com.br/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 10,
+    title:
+      "Sucesso e sofisticação: a jornada de Heleno Alves no mercado de luxo",
+    source: "People Brasil",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://peoplebrasil.com.br/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 11,
+    title:
+      "O diferencial de Heleno Alves no mercado imobiliário premium de Balneário Camboriú",
+    source: "US News",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://usnews.com.br/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 12,
+    title:
+      "Heleno Alves expande sua expertise para o mercado de luxo catarinense",
+    source: "Jurídico News",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://juridico.news/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 13,
+    title:
+      "Conheça o corretor que está elevando o padrão imobiliário em Balneário Camboriú",
+    source: "Business Week",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://businessweek.com.br/2025/12/10/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 14,
+    title:
+      "O protagonismo de Heleno Alves no segmento de imóveis de alto padrão",
+    source: "Poder e Negócios",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://poderenegocios.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 15,
+    title:
+      "De oportunidades a luxo: a atuação de Heleno Alves em Balneário Camboriú",
+    source: "Justiça News",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://justica.news/2025/12/10/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 16,
+    title:
+      "Heleno Alves transforma experiências de compra no mercado de alto padrão",
+    source: "Gazeta de Brasília",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://gazetadebrasilia.com/2025/12/10/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 17,
+    title:
+      "O consultor que está atraindo clientes de alto poder aquisitivo para Balneário Camboriú",
+    source: "Redetv News",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://redetv.news/2025/12/10/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 18,
+    title:
+      "O novo capítulo de Heleno Alves no mercado imobiliário nacional",
+    source: "Istoé Tech",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://istoe.tech/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+
+  {
+    id: 19,
+    title:
+      "Como Heleno Alves alia atendimento premium à expansão imobiliária",
+    source: "Isto É Rio",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://istoerio.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 20,
+    title:
+      "O crescimento do mercado de luxo em Balneário Camboriú com Heleno Alves",
+    source: "Isto É SC",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://istoesc.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 21,
+    title:
+      "Heleno Alves: referência em imóveis de luxo no Brasil e agora em SC",
+    source: "Isto É Bahia",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://istoebahia.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 22,
+    title:
+      "A trajetória inspiradora de Heleno Alves no universo imobiliário de alto padrão",
+    source: "Isto É Floripa",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://istoefloripa.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 23,
+    title:
+      "A trajetória inspiradora de Heleno Alves no universo imobiliário de alto padrão",
+    source: "Correio de Alagoas",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://istoefloripa.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
   }
   
   
@@ -324,7 +505,7 @@ const nextItem = () => {
                   alt={item.title}
                   className="
                     w-full h-full object-cover object-top
-                    transition-transform duration-500 group-hover:scale-105
+                    transition-transform duration-300 group-hover:scale-105
                   "
                   loading="lazy"
                 />
