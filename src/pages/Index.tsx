@@ -119,7 +119,8 @@ const Index: React.FC = () => {
       <Header />
 
       {/* HERO */}
-      <section className="relative h-[85vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+      <section className="relative h-[85vh] md:h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+
         <picture>
           <source media="(max-width: 768px)" srcSet="/heleno-hero2.webp" />
           <source media="(min-width: 769px)" srcSet="/opt-hero-balneario.webp" />
@@ -134,12 +135,7 @@ const Index: React.FC = () => {
 
         <div className="absolute inset-0 bg-gradient-to-b from-[#07262dcc] via-[#07262d55] to-[#07262dcc]" />
 
-        {/* scroll indicator */}
-        <div className="absolute bottom-6 flex justify-center w-full">
-          <div className="w-6 h-10 border-2 border-white/60 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/80 rounded-full mt-2 animate-pulse" />
-          </div>
-        </div>
+       
       </section>
 
       {/* POR QUE BC */}

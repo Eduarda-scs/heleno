@@ -15,6 +15,7 @@ const navigation = [
   { name: "FG Empreendimentos", href: "/fgabout" },
   { name: "Sobre", href: "/sobre" },
   { name: "Contato", href: "/contato" },
+  { name: "Blog", href: "/Blog" },
 ];
 
  const Header = () => {

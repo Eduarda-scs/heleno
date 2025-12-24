@@ -60,6 +60,7 @@ const Properties = () => {
       const backendFilters = filter === "Todos" ? null : { 
         type: filter 
       };
+      console.log("beckendfiltres" , backendFilters)
 
       const response = await getPropertyFromWebhook(page, backendFilters);
       
@@ -117,8 +118,18 @@ const Properties = () => {
     }
   }, [activeFilter]);
 
+  const filteredProperties = properties.filter((property) => {
+    if (activeFilter === "Todos") return true;
+
+    // o status vem do property_types
+    const type = property.property_types?.[0]?.property_type_name;
+
+    return type === activeFilter;
+  });
+
+
   // Converter dados para o formato esperado pelo PropertyCard
-  const parsedProperties = properties.map((property) => {
+const parsedProperties = filteredProperties.map((property) => {
     // Encontra a imagem de capa (is_cover: true) ou usa a primeira imagem
     const coverImage = property.images?.find(img => img.is_cover)?.url || 
                       property.images?.[0]?.url || "";
@@ -149,29 +160,31 @@ const Properties = () => {
       }
     };
   });
+  console.log("🏠 propriedadades", parsedProperties)
 
   // Obter filtros dinamicamente dos property_types
   const filters = propertyTypes.length > 0
     ? ["Todos", ...propertyTypes.map(type => type.property_type_name)]
-    : ["Todos"];
+    : ["Todos"]; 
+    console.log("🔍 filtro", filters)
 
   // Funções de navegação
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      loadProperties(currentPage + 1);
+      loadProperties(currentPage + 1, activeFilter);
     }
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
-      loadProperties(currentPage - 1);
+      loadProperties(currentPage - 1, activeFilter);
     }
   };
 
   // Função para ir para uma página específica
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
-      loadProperties(page);
+      loadProperties(page, activeFilter);
     }
   };
 

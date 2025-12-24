@@ -7,11 +7,46 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useRef, useEffect, useState } from "react";
 
 const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+
+const mediaHighlights = [
+  {
+    id: 1,
+    title:
+      "Heleno Alves: o nome que redefine o mercado imobiliário de luxo em Balneário Camboriú",
+    source: "Forbes Latina",
+    image:
+      "https://forbeslatina.com/wp-content/uploads/2025/12/Heleno-1-scaled-2-1102x1536-2.webp",
+    link: "https://forbeslatina.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc/",
+  },
+  {
+    id: 2,
+    title:
+      "O nome que redefine o mercado imobiliário de luxo no Brasil, Heleno Alves",
+    source: "Look Magazine",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-2-768x1152.jpg",
+    link: "https://lookmagazine.com.br/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  },
+  {
+    id: 3,
+    title:
+      "Heleno: O nome que redefine o mercado imobiliário de luxo no Brasil",
+    source: "Correio de Alagoas",
+    image:
+      "https://painel.prnews.agency/wp-content/uploads/sites/3/2025/12/Heleno-3-683x1024.jpg",
+    link: "https://correiodealagoas.com/heleno-alves-o-nome-que-redefine-o-mercado-imobiliario-de-luxo-em-balneario-camboriu-sc-brasil/",
+  }
+  
+  
+
+  // 👉 A PARTIR DAQUI VOCÊ DUPLICA
+];
+
 
 const values = [
   {
@@ -41,6 +76,33 @@ const values = [
 ];
 
 const About = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) =>
+        prev === mediaHighlights.length - 1 ? 0 : prev + 1
+      );
+    }, 5000); // troca a cada 5s
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const item = mediaHighlights[currentIndex];
+  const prevItem = () => {
+  setCurrentIndex((prev) =>
+    prev === 0 ? mediaHighlights.length - 1 : prev - 1
+  );
+};
+
+const nextItem = () => {
+  setCurrentIndex((prev) =>
+    prev === mediaHighlights.length - 1 ? 0 : prev + 1
+  );
+};
+
+
+
   return (
     <div className="min-h-screen bg-background">
       <Suspense fallback={<div>Carregando...</div>}>
@@ -230,6 +292,72 @@ const About = () => {
           </div>
         </div>
       </section>
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-16 animate-fade-up">
+            <h2 className="text-4xl md:text-5xl font-bwmodelica text-foreground mb-4">
+              Destaque na <span className="text-secondary">Mídia Nacional</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Reconhecimento em veículos que são referência em negócios, luxo e mercado imobiliário.
+            </p>
+          </div>
+
+          {/* CARD ÚNICO */}
+          <div className="flex justify-center">
+            <a
+              key={item.id}
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                group bg-card rounded-2xl overflow-hidden
+                shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-gold)]
+                transition-all duration-700
+                w-full max-w-sm md:max-w-md lg:max-w-lg
+              "
+            >
+              {/* IMAGEM */}
+              <div className="relative h-64 md:h-72 lg:h-80 overflow-hidden">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="
+                    w-full h-full object-cover object-top
+                    transition-transform duration-500 group-hover:scale-105
+                  "
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                <span className="absolute bottom-4 left-4 text-sm font-semibold text-secondary bg-black/60 px-3 py-1 rounded-full">
+                  {item.source}
+                </span>
+              </div>
+
+              {/* TEXTO */}
+              <div className="p-6 lg:p-8">
+                <h3 className="text-lg md:text-xl lg:text-2xl font-bwmodelica text-foreground mb-4 leading-snug">
+                  {item.title}
+                </h3>
+
+                <div className="flex items-center gap-2 text-secondary font-semibold">
+                  Ler matéria completa
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </div>
+              </div>
+            </a>
+          </div>
+
+            
+          {/* MOBILE */}
+          <div className="flex md:hidden justify-center mt-6">
+            <span className="text-sm text-muted-foreground">
+              A matéria muda automaticamente
+            </span>
+          </div>
+        </div>
+      </section>
+
 
       {/* CTA */}
       <section className="py-20 bg-primary text-primary-foreground">
