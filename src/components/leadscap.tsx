@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { X, MessageCircle } from "lucide-react";
+import { sendLeadToWebhook } from "@/components/c2sapi";
 
 function LeadModal() {
   const [openModal, setOpenModal] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
   const [sent, setSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Abre assim que carrega
   useEffect(() => {
@@ -37,8 +39,32 @@ function LeadModal() {
               {!sent ? (
                 <form
                   className="space-y-3"
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
+
+                    const form = e.currentTarget;
+                    const formData = new FormData(form);
+
+                    const email = (formData.get("email") as string).trim();
+
+                    // valida gmail
+                    if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
+                      setEmailError(
+                        "Digite um e-mail válido do Gmail (ex: nome@gmail.com)"
+                      );
+                      return;
+                    }
+
+                    setEmailError(null);
+
+                    await sendLeadToWebhook({
+                      name: formData.get("name") as string,
+                      email,
+                      phone: formData.get("phone") as string,
+                      message: formData.get("message") as string,
+                      source: "modal",
+                    });
+
                     setSent(true);
                   }}
                 >
@@ -47,6 +73,7 @@ function LeadModal() {
                   </p>
 
                   <input
+                    name="name"
                     required
                     type="text"
                     placeholder="Nome"
@@ -54,20 +81,40 @@ function LeadModal() {
                   />
 
                   <input
+                    name="phone"
                     required
                     type="tel"
                     placeholder="Telefone"
                     className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
                   />
 
-                  <input
-                    required
-                    type="email"
-                    placeholder="E-mail"
-                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  {/* EMAIL */}
+                  <div>
+                    <input
+                      name="email"
+                      required
+                      type="email"
+                      placeholder="E-mail"
+                      onChange={() => setEmailError(null)}
+                      className={`
+                        w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2
+                        ${
+                          emailError
+                            ? "border-red-500 focus:ring-red-500"
+                            : "focus:ring-primary"
+                        }
+                      `}
+                    />
+
+                    {emailError && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {emailError}
+                      </p>
+                    )}
+                  </div>
 
                   <textarea
+                    name="message"
                     required
                     placeholder="Mensagem"
                     rows={3}
@@ -104,17 +151,17 @@ function LeadModal() {
             setShowBubble(false);
           }}
           className="
-            fixed 
-            bottom-[96px] 
-            right-6 
+            fixed
+            bottom-[96px]
+            right-6
             z-[9999]
-            w-14 
-            h-14 
-            rounded-full 
-            bg-primary 
-            shadow-xl 
-            flex 
-            items-center 
+            w-14
+            h-14
+            rounded-full
+            bg-primary
+            shadow-xl
+            flex
+            items-center
             justify-center
             animate-float
             hover:scale-105

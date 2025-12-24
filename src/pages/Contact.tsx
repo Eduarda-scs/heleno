@@ -12,14 +12,14 @@ import {
   Instagram,
 } from "lucide-react";
 import { toast } from "sonner";
+import { sendLeadToWebhook } from "@/components/c2sapi";
 
 // Lazy Load components
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
 
-// ⬇⬇ API C2S
-import { createLeadC2S } from "@/components/c2sapi";
+
 
 const contactInfo = [
   {
@@ -64,59 +64,24 @@ const Contact = () => {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return;
-    }
+  await sendLeadToWebhook({
+    name: formData.name,
+    email: formData.email,
+    phone: formData.phone,
+    message: formData.message,
+    source: "contact_page",
+  });
 
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      phone2: formData.phone,
-      source: "site_heleno",
-      ramal: "",
-      city: "",
-      neighbourhood: "",
-      prop_ref: "",
-      type_negotiation: "",
-      brand: "",
-      model: "",
-      description: "",
-      price: "",
-      url: window.location.href,
-      tags: [],
-      body: `
-Nova mensagem enviada pelo site:
-
-Nome: ${formData.name}
-Email: ${formData.email}
-Telefone: ${formData.phone}
-
-Mensagem:
-${formData.message}
-      `,
-    };
-
-    try {
-      await createLeadC2S(payload);
-
-      toast.success("Mensagem enviada com sucesso!");
-
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        message: "",
-      });
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao enviar mensagem. Tente novamente.");
-    }
-  };
-
+  // opcional
+  setFormData({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+};
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
