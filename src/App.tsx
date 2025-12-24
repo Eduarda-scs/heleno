@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CookieConsent from "@/components/CookieConsent";
+import LeadModal from "@/components/leadscap";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth, AuthProvider } from "@/contexts/AuthContext";
@@ -124,6 +125,7 @@ const App = () => {
           <AuthProvider>
             <AppRoutes />
             <CookieConsent />
+            <LeadModal />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
