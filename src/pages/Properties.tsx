@@ -38,6 +38,8 @@ interface FilterType {
 const Properties = () => {
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+
   
   // ESTADOS ATUALIZADOS PARA PAGINAÇÃO REAL
   const [properties, setProperties] = useState<PropertyType[]>([]);
@@ -118,14 +120,34 @@ const Properties = () => {
     }
   }, [activeFilter]);
 
-  const filteredProperties = properties.filter((property) => {
-    if (activeFilter === "Todos") return true;
+const filteredProperties = properties.filter((property) => {
+  // 🔹 FILTRO POR TIPO
+  const matchesFilter =
+    activeFilter === "Todos" ||
+    property.property_types?.some(
+      (type) => type.property_type_name === activeFilter
+    );
 
-    // o status vem do property_types
-    const type = property.property_types?.[0]?.property_type_name;
+  if (!matchesFilter) return false;
 
-    return type === activeFilter;
-  });
+  // 🔹 BUSCA GLOBAL (texto livre)
+  if (!searchTerm.trim()) return true;
+
+  const search = searchTerm.toLowerCase();
+
+  const searchableText = `
+    ${property.property_title}
+    ${property.property_city}
+    ${property.property_price}
+    ${property.property_area_sqm}
+    ${property.property_types?.map(t => t.property_type_name).join(" ")}
+    ${property.categories?.map(c => c.category_name).join(" ")}
+    ${property.amenities?.map(a => a.amenitie_name).join(" ")}
+  `.toLowerCase();
+
+  return searchableText.includes(search);
+});
+
 
 
   // Converter dados para o formato esperado pelo PropertyCard
@@ -339,6 +361,21 @@ const parsedProperties = filteredProperties.map((property) => {
           </div>
         </div>
       </section>
+      {/* BARRA DE PESQUISA */}
+      <section className="py-6 bg-background border-b border-border">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="max-w-xl mx-auto">
+            <input
+              type="text"
+              placeholder="Pesquisar por título, cidade, tipo, categoria, amenidades..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition"
+            />
+          </div>
+        </div>
+      </section>
+
 
       {/* DESKTOP - PAGINAÇÃO REAL */}
       <section className="py-16 bg-background hidden md:block">
