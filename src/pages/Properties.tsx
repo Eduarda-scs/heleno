@@ -42,6 +42,10 @@ const Properties = () => {
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [propertyStatus, setPropertyStatus] = useState(""); // na-planta | pronto
+  const [priceOrder, setPriceOrder] = useState(""); // asc | desc
+
 
   
   // ESTADOS ATUALIZADOS PARA PAGINAÇÃO REAL
@@ -185,13 +189,13 @@ const parsedProperties = filteredProperties.map((property) => {
       }
     };
   });
-  console.log("🏠 propriedadades", parsedProperties)
+  
 
   // Obter filtros dinamicamente dos property_types
   const filters = propertyTypes.length > 0
     ? ["Todos", ...propertyTypes.map(type => type.property_type_name)]
     : ["Todos"]; 
-    console.log("🔍 filtro", filters)
+    
 
   // Funções de navegação
   const goToNextPage = () => {
@@ -343,41 +347,74 @@ const parsedProperties = filteredProperties.map((property) => {
         </div>
       </section>
 
-      {/* FILTROS */}
+      {/* BARRA DE PESQUISA AVANÇADA */}
       <section className="py-8 bg-luxury-bg border-b border-border">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex flex-wrap gap-3 justify-center font-bwmodelica">
-            {filters.map((filter) => (
+          
+          <div className="mx-auto max-w-6xl bg-background/80 backdrop-blur-md border border-border rounded-2xl shadow-sm px-4 py-4 lg:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center font-bwmodelica">
+
+              {/* Nome do imóvel */}
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  🏢
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar empreendimento"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition"
+                />
+              </div>
+
+              {/* Status */}
+              <div className="relative w-full lg:w-52">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  🏗️
+                </span>
+                <select
+                  value={propertyStatus}
+                  onChange={(e) => setPropertyStatus(e.target.value)}
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition appearance-none"
+                >
+                  <option value="">Na planta / Pronto</option>
+                  <option value="na planta">Na planta</option>
+                  <option value="pronto">Pronto</option>
+                </select>
+              </div>
+
+              {/* Valor */}
+              <div className="relative w-full lg:w-48">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  💰
+                </span>
+                <select
+                  value={priceOrder}
+                  onChange={(e) => setPriceOrder(e.target.value)}
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition appearance-none"
+                >
+                  <option value="">Valor</option>
+                  <option value="asc">Menor preço</option>
+                  <option value="desc">Maior preço</option>
+                </select>
+              </div>
+
+              {/* Botão pesquisar */}
               <Button
-                key={filter}
-                variant={activeFilter === filter ? "gold" : "outline"}
-                onClick={() => setActiveFilter(filter)}
-                className="transition-all duration-300"
-                disabled={isLoading}
+                variant="gold"
+                className="h-12 px-8 rounded-xl text-sm font-semibold tracking-wide shadow-md hover:shadow-lg transition-all"
               >
-                {filter}
-                {isLoading && activeFilter === filter && (
-                  <span className="ml-2 animate-spin">⟳</span>
-                )}
+                🔍 Buscar
               </Button>
-            ))}
+
+            </div>
           </div>
+
         </div>
       </section>
-      {/* BARRA DE PESQUISA */}
-      <section className="py-6 bg-background border-b border-border">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="max-w-xl mx-auto">
-            <input
-              type="text"
-              placeholder="Pesquisar por título, cidade, tipo, categoria, amenidades..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-12 px-4 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition"
-            />
-          </div>
-        </div>
-      </section>
+
+
 
 
       {/* DESKTOP - PAGINAÇÃO REAL */}
