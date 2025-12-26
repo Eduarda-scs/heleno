@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { PlusCircle, Trash2, Eye, User, Shield, ChevronLeft, ChevronRight, Image as ImageIcon, Filter } from "lucide-react";
 import ModalCadastroImovel from "@/components/ModalCadastroImovel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getPropertyFromWebhook } from "@/hooks/Admin/PropertyService";
+import { getPropertyFromWebhook, getUniquePropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 import { removeProperty } from "@/hooks/Admin/RemoveProperty";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -77,20 +77,13 @@ interface Property {
   images: Image[];
 }
 
-interface WebhookResponse {
-  properties: Property[];
-  categories: Category[];
-  amenities: Amenity[];
-  property_types: PropertyType[];
-}
-
 export default function CadastroImoveis() {
   const [imoveis, setImoveis] = useState<Property[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
   const [busca, setBusca] = useState("");
-  const [filtroCriadoPor, setFiltroCriadoPor] = useState<string>("todos"); // "todos", "admin", "api"
+  const [filtroCriadoPor, setFiltroCriadoPor] = useState<string>("todos");
   const [selecionados, setSelecionados] = useState<number[]>([]);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -99,46 +92,76 @@ export default function CadastroImoveis() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  async function carregarImoveis() {
-    const retorno: WebhookResponse[] | null = await getPropertyFromWebhook();
-    console.log("[Cadastroimoveis] 📌 Retorno:", retorno);
+  async function carregarImoveis(page: number = 1, limit: number = 5) {
+    setIsLoadingProperties(true);
+    try {
+      const retorno = await getPropertyFromWebhook(page, limit);
+      console.log("[Cadastroimoveis] 📌 Retorno:", retorno);
 
-    if (retorno && retorno.length > 0) {
-      if (retorno[0].properties) {
-        setImoveis(retorno[0].properties);
+      if (retorno) {
+        if (retorno.properties) {
+          setImoveis(retorno.properties);
+        } else {
+          setImoveis([]);
+        }
+
+        if (retorno.amenities) {
+          setAmenities(retorno.amenities);
+        } else {
+          setAmenities([]);
+        }
+
+        if (retorno.categories) {
+          setCategories(retorno.categories);
+        } else {
+          setCategories([]);
+        }
+
+        if (retorno.property_types) {
+          setPropertyTypes(retorno.property_types);
+        } else {
+          setPropertyTypes([]);
+        }
+
+        setTotalPages(retorno.total_pages || 1);
+        setTotalItems(retorno.total_items || 0);
+        setCurrentPage(retorno.page || page);
       } else {
         setImoveis([]);
-      }
-
-      if (retorno[0].amenities) {
-        setAmenities(retorno[0].amenities);
-      } else {
         setAmenities([]);
-      }
-
-      if (retorno[0].categories) {
-        setCategories(retorno[0].categories);
-      } else {
         setCategories([]);
-      }
-
-      if (retorno[0].property_types) {
-        setPropertyTypes(retorno[0].property_types);
-      } else {
         setPropertyTypes([]);
+        setTotalPages(1);
+        setTotalItems(0);
       }
-    } else {
+    } catch (error) {
+      console.error("Erro ao carregar imóveis:", error);
       setImoveis([]);
       setAmenities([]);
       setCategories([]);
       setPropertyTypes([]);
+      setTotalPages(1);
+      setTotalItems(0);
+    } finally {
+      setIsLoadingProperties(false);
+      if (!isInitialized) setIsInitialized(true);
     }
   }
 
   useEffect(() => {
-    carregarImoveis();
-  }, []);
+    const timer = setTimeout(() => {
+      if (!isInitialized) {
+        carregarImoveis(1, itemsPerPage);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isInitialized]);
 
   const handleSelect = (id: number) => {
     setSelecionados((prev) =>
@@ -168,17 +191,53 @@ export default function CadastroImoveis() {
     });
 
     setSelecionados([]);
+
+    carregarImoveis(currentPage, itemsPerPage);
   };
 
-  const handleAbrirDetalhes = (imovel: Property) => {
-    navigate(`/admin/detalhes-imovel/${imovel.id}`, {
-      state: {
-        imovel,
-        allAmenities: amenities,
-        allCategories: categories,
-        allPropertyTypes: propertyTypes
+  const handleAbrirDetalhes = async (imovel: Property) => {
+    try {
+      console.log(`[Cadastroimoveis] 🚀 Clicou em Detalhes do imóvel ${imovel.id}`);
+
+      console.log('📤 Enviando dados completos do imóvel para webhook/uniqueITEM:', imovel);
+
+      const uniquePropertyData = await getUniquePropertyFromWebhook(imovel);
+
+      if (uniquePropertyData) {
+        console.log('✅ Dados recebidos do webhook/uniqueITEM:', uniquePropertyData);
+
+        navigate(`/admin/detalhes-imovel/${imovel.id}`, {
+          state: {
+            imovel: uniquePropertyData,
+            allAmenities: amenities,
+            allCategories: categories,
+            allPropertyTypes: propertyTypes
+          }
+        });
+      } else {
+        console.error('❌ Não foi possível obter dados do webhook/uniqueITEM - usando dados locais');
+
+        navigate(`/admin/detalhes-imovel/${imovel.id}`, {
+          state: {
+            imovel,
+            allAmenities: amenities,
+            allCategories: categories,
+            allPropertyTypes: propertyTypes
+          }
+        });
       }
-    });
+    } catch (error) {
+      console.error('❌ Erro ao buscar dados únicos:', error);
+
+      navigate(`/admin/detalhes-imovel/${imovel.id}`, {
+        state: {
+          imovel,
+          allAmenities: amenities,
+          allCategories: categories,
+          allPropertyTypes: propertyTypes
+        }
+      });
+    }
   };
 
   const formatPrice = (priceString: string) => {
@@ -202,20 +261,17 @@ export default function CadastroImoveis() {
     return formatted;
   };
 
-  // Função atualizada para identificar quem criou o imóvel
   const getCriadoPorTipo = (imovel: Property): string => {
-    // Se a propriedade property_created_by existe e tem valor, usamos ela
     if (imovel.property_created_by) {
       return imovel.property_created_by;
     }
-    
-    // Fallback para compatibilidade com dados antigos
+
     if (imovel.client_name !== "admin" &&
         imovel.client_phone !== "admin" &&
         imovel.client_email !== "admin") {
       return "client";
     }
-    
+
     return "admin";
   };
 
@@ -253,7 +309,7 @@ export default function CadastroImoveis() {
             </div>
           </div>
         );
-      
+
       case "api":
         return (
           <div className="flex items-center gap-2">
@@ -266,7 +322,7 @@ export default function CadastroImoveis() {
             </div>
           </div>
         );
-      
+
       default:
         return (
           <div className="flex items-center gap-2">
@@ -294,32 +350,26 @@ export default function CadastroImoveis() {
     return "-";
   };
 
-  // Filtros combinados
   const imoveisFiltrados = imoveis.filter((i) => {
-    // Filtro por busca no título
     const buscaMatch = i.property_title?.toLowerCase().includes(busca.toLowerCase());
-    
-    // Filtro por "Criado Por"
+
     const criadoPor = getCriadoPorTipo(i);
     const criadoPorMatch = filtroCriadoPor === "todos" || criadoPor === filtroCriadoPor;
-    
+
     return buscaMatch && criadoPorMatch;
   });
 
-  const totalPages = Math.ceil(imoveisFiltrados.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const imoveisPaginados = imoveisFiltrados.slice(startIndex, endIndex);
-
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages && !isLoadingProperties) {
+      carregarImoveis(currentPage + 1, itemsPerPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    if (currentPage > 1 && !isLoadingProperties) {
+      carregarImoveis(currentPage - 1, itemsPerPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -327,19 +377,21 @@ export default function CadastroImoveis() {
     const newItemsPerPage = parseInt(value);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
+    carregarImoveis(1, newItemsPerPage);
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [busca, filtroCriadoPor]);
+  const handleModalSave = () => {
+    carregarImoveis(currentPage, itemsPerPage);
+  };
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header fixo no topo */}
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Header />
       </Suspense>
-      {/* Conteúdo principal com margem superior para não ficar sob o header */}
       <div className="pt-28 md:pt-32 p-4 md:p-6 space-y-6">
         <div
           className={`flex ${
@@ -379,13 +431,12 @@ export default function CadastroImoveis() {
           </div>
         </div>
 
-        {/* Filtro "Criado Por" */}
         <div className="bg-white p-4 rounded-lg border shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <Filter className="h-5 w-5 text-gray-600" />
             <h3 className="text-lg font-semibold">Filtrar por</h3>
           </div>
-          
+
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Criado por:</span>
@@ -416,9 +467,9 @@ export default function CadastroImoveis() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="ml-auto flex items-center gap-2 text-sm text-gray-600">
-              <span>Mostrando {imoveisFiltrados.length} de {imoveis.length} imóveis</span>
+              <span>Mostrando {imoveisFiltrados.length} de {totalItems} imóveis</span>
               {filtroCriadoPor !== "todos" && (
                 <Button
                   variant="ghost"
@@ -433,236 +484,250 @@ export default function CadastroImoveis() {
           </div>
         </div>
 
-        {!isMobile ? (
-          <div className="rounded-md border border-border shadow-sm overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="w-[50px] text-center">Sel.</TableHead>
-                  <TableHead className="w-[80px]">Imagem</TableHead>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Cidade</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Criado Por</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
+        {isLoadingProperties ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+            <p className="text-xl text-muted-foreground">
+              {currentPage > 1 ? `Carregando página ${currentPage}...` : "Carregando imóveis..."}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Aguarde enquanto buscamos os dados
+            </p>
+          </div>
+        ) : (
+          <>
+            {!isMobile ? (
+              <div className="rounded-md border border-border shadow-sm overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow>
+                      <TableHead className="w-[50px] text-center">Sel.</TableHead>
+                      <TableHead className="w-[80px]">Imagem</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Cidade</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Criado Por</TableHead>
+                      <TableHead className="text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
 
-              <TableBody>
-                {imoveisPaginados.length > 0 ? (
-                  imoveisPaginados.map((imovel) => {
-                    const criadoPor = getCriadoPorTipo(imovel);
+                  <TableBody>
+                    {imoveisFiltrados.length > 0 ? (
+                      imoveisFiltrados.map((imovel) => {
+                        const criadoPor = getCriadoPorTipo(imovel);
+                        const firstImage = getFirstImage(imovel);
+
+                        return (
+                          <TableRow
+                            key={imovel.id}
+                            className={`hover:bg-muted/30 ${
+                              selecionados.includes(imovel.id) ? "bg-muted/50" : ""
+                            }`}
+                          >
+                            <TableCell className="text-center">
+                              <input
+                                type="checkbox"
+                                checked={selecionados.includes(imovel.id)}
+                                onChange={() => handleSelect(imovel.id)}
+                                className="accent-primary"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {firstImage ? (
+                                <div className="w-12 h-12 rounded-md overflow-hidden border">
+                                  <img
+                                    src={firstImage}
+                                    alt={`Imagem de ${imovel.property_title}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-12 h-12 rounded-md border border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+                                  <ImageIcon className="h-5 w-5 text-gray-400" />
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>{imovel.id}</TableCell>
+                            <TableCell className="font-semibold">
+                              {imovel.property_title}
+                            </TableCell>
+                            <TableCell className="capitalize">
+                              {getPropertyTypesDisplay(imovel)}
+                            </TableCell>
+                            <TableCell>
+                              {imovel.property_city || "-"}
+                            </TableCell>
+                            <TableCell className="font-medium text-green-600">
+                              R$ {formatPrice(imovel.property_price)}
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(imovel.property_status, criadoPor)}
+                            </TableCell>
+                            <TableCell>
+                              {getCreatedByBadge(imovel)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAbrirDetalhes(imovel)}
+                                className="hover:bg-[#07262d] hover:text-white"
+                              >
+                                <Eye className="h-4 w-4 mr-1" /> Detalhes
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={10}
+                          className="text-center text-muted-foreground py-6"
+                        >
+                          {totalItems === 0 ? (
+                            "Nenhum imóvel cadastrado."
+                          ) : (
+                            <div className="flex flex-col items-center gap-2">
+                              <span>Nenhum imóvel encontrado com os filtros atuais.</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setFiltroCriadoPor("todos");
+                                  setBusca("");
+                                }}
+                                className="hover:bg-[#07262d] hover:text-white"
+                              >
+                                Limpar filtros
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {imoveisFiltrados.length > 0 ? (
+                  imoveisFiltrados.map((imovel) => {
                     const firstImage = getFirstImage(imovel);
+                    const criadoPor = getCriadoPorTipo(imovel);
 
                     return (
-                      <TableRow
+                      <div
                         key={imovel.id}
-                        className={`hover:bg-muted/30 ${
-                          selecionados.includes(imovel.id) ? "bg-muted/50" : ""
+                        className={`border rounded-xl p-4 shadow-sm bg-white ${
+                          selecionados.includes(imovel.id) ? "border-primary" : ""
                         }`}
                       >
-                        <TableCell className="text-center">
+                        {firstImage && (
+                          <div className="mb-3 rounded-lg overflow-hidden">
+                            <img
+                              src={firstImage}
+                              alt={imovel.property_title}
+                              className="w-full h-48 object-cover"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-center mb-2">
+                          <h2 className="font-semibold text-lg">{imovel.property_title}</h2>
                           <input
                             type="checkbox"
                             checked={selecionados.includes(imovel.id)}
                             onChange={() => handleSelect(imovel.id)}
                             className="accent-primary"
                           />
-                        </TableCell>
-                        <TableCell>
-                          {firstImage ? (
-                            <div className="w-12 h-12 rounded-md overflow-hidden border">
-                              <img
-                                src={firstImage}
-                                alt={`Imagem de ${imovel.property_title}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded-md border border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                              <ImageIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>{imovel.id}</TableCell>
-                        <TableCell className="font-semibold">
-                          {imovel.property_title}
-                        </TableCell>
-                        <TableCell className="capitalize">
-                          {getPropertyTypesDisplay(imovel)}
-                        </TableCell>
-                        <TableCell>
-                          {imovel.property_city || "-"}
-                        </TableCell>
-                        <TableCell className="font-medium text-green-600">
-                          R$ {formatPrice(imovel.property_price)}
-                        </TableCell>
-                        <TableCell>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Tipo:</strong> {getPropertyTypesDisplay(imovel)}
+                        </p>
+
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Cidade:</strong> {imovel.property_city}
+                        </p>
+
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Valor:</strong>{" "}
+                          <span className="text-green-600 font-semibold">
+                            R$ {formatPrice(imovel.property_price)}
+                          </span>
+                        </p>
+
+                        <div className="mb-3">
+                          <p className="text-sm text-gray-600 mb-1">
+                            <strong>Status:</strong>
+                          </p>
                           {getStatusBadge(imovel.property_status, criadoPor)}
-                        </TableCell>
-                        <TableCell>
+                        </div>
+
+                        <div className="mb-3 pb-3 border-b">
+                          <p className="text-sm text-gray-600 mb-2">
+                            <strong>Criado por:</strong>
+                          </p>
                           {getCreatedByBadge(imovel)}
-                        </TableCell>
-                        <TableCell className="text-center">
+                        </div>
+
+                        {imovel.categories && imovel.categories.length > 0 && (
+                          <div className="mb-3 flex flex-wrap gap-1">
+                            {imovel.categories.map((cat) => (
+                              <span
+                                key={cat.id}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
+                              >
+                                {cat.category_name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleAbrirDetalhes(imovel)}
-                            className="hover:bg-[#07262d] hover:text-white"
+                            className="w-full hover:bg-[#07262d] hover:text-white"
                           >
                             <Eye className="h-4 w-4 mr-1" /> Detalhes
                           </Button>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                      </div>
                     );
                   })
                 ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="text-center text-muted-foreground py-6"
-                    >
-                      {imoveis.length === 0 ? (
-                        "Nenhum imóvel cadastrado."
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <span>Nenhum imóvel encontrado com os filtros atuais.</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setFiltroCriadoPor("todos");
-                              setBusca("");
-                            }}
-                            className="hover:bg-[#07262d] hover:text-white"
-                          >
-                            Limpar filtros
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {imoveisPaginados.length > 0 ? (
-              imoveisPaginados.map((imovel) => {
-                const firstImage = getFirstImage(imovel);
-                const criadoPor = getCriadoPorTipo(imovel);
-
-                return (
-                  <div
-                    key={imovel.id}
-                    className={`border rounded-xl p-4 shadow-sm bg-white ${
-                      selecionados.includes(imovel.id) ? "border-primary" : ""
-                    }`}
-                  >
-                    {firstImage && (
-                      <div className="mb-3 rounded-lg overflow-hidden">
-                        <img
-                          src={firstImage}
-                          alt={imovel.property_title}
-                          className="w-full h-48 object-cover"
-                        />
+                  <div className="text-center text-muted-foreground p-4 border rounded-lg bg-white">
+                    {totalItems === 0 ? (
+                      "Nenhum imóvel cadastrado."
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <span>Nenhum imóvel encontrado com os filtros atuais.</span>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setFiltroCriadoPor("todos");
+                            setBusca("");
+                          }}
+                          className="hover:bg-[#07262d] hover:text-white"
+                        >
+                          Limpar filtros
+                        </Button>
                       </div>
                     )}
-
-                    <div className="flex justify-between items-center mb-2">
-                      <h2 className="font-semibold text-lg">{imovel.property_title}</h2>
-                      <input
-                        type="checkbox"
-                        checked={selecionados.includes(imovel.id)}
-                        onChange={() => handleSelect(imovel.id)}
-                        className="accent-primary"
-                      />
-                    </div>
-
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>Tipo:</strong> {getPropertyTypesDisplay(imovel)}
-                    </p>
-
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>Cidade:</strong> {imovel.property_city}
-                    </p>
-
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>Valor:</strong>{" "}
-                      <span className="text-green-600 font-semibold">
-                        R$ {formatPrice(imovel.property_price)}
-                      </span>
-                    </p>
-
-                    <div className="mb-3">
-                      <p className="text-sm text-gray-600 mb-1">
-                        <strong>Status:</strong>
-                      </p>
-                      {getStatusBadge(imovel.property_status, criadoPor)}
-                    </div>
-
-                    <div className="mb-3 pb-3 border-b">
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Criado por:</strong>
-                      </p>
-                      {getCreatedByBadge(imovel)}
-                    </div>
-
-                    {imovel.categories && imovel.categories.length > 0 && (
-                      <div className="mb-3 flex flex-wrap gap-1">
-                        {imovel.categories.map((cat) => (
-                          <span
-                            key={cat.id}
-                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
-                          >
-                            {cat.category_name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="mt-3 flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAbrirDetalhes(imovel)}
-                        className="w-full hover:bg-[#07262d] hover:text-white"
-                      >
-                        <Eye className="h-4 w-4 mr-1" /> Detalhes
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center text-muted-foreground p-4 border rounded-lg bg-white">
-                {imoveis.length === 0 ? (
-                  "Nenhum imóvel cadastrado."
-                ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <span>Nenhum imóvel encontrado com os filtros atuais.</span>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setFiltroCriadoPor("todos");
-                        setBusca("");
-                      }}
-                      className="hover:bg-[#07262d] hover:text-white"
-                    >
-                      Limpar filtros
-                    </Button>
                   </div>
                 )}
               </div>
             )}
-          </div>
+          </>
         )}
 
-        {imoveisFiltrados.length > 0 && (
+        {totalItems > 0 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Itens por página:</span>
@@ -670,6 +735,7 @@ export default function CadastroImoveis() {
                 value={itemsPerPage}
                 onChange={(e) => handleItemsPerPageChange(e.target.value)}
                 className="border rounded-md px-3 py-1 text-sm"
+                disabled={isLoadingProperties}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -680,7 +746,7 @@ export default function CadastroImoveis() {
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">
-                {startIndex + 1}-{Math.min(endIndex, imoveisFiltrados.length)} de {imoveisFiltrados.length}
+                {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
               </span>
             </div>
 
@@ -689,7 +755,7 @@ export default function CadastroImoveis() {
                 variant="outline"
                 size="sm"
                 onClick={goToPrevPage}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || isLoadingProperties}
                 className="flex items-center gap-1 hover:bg-[#07262d] hover:text-white"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -704,7 +770,7 @@ export default function CadastroImoveis() {
                 variant="outline"
                 size="sm"
                 onClick={goToNextPage}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || isLoadingProperties}
                 className="flex items-center gap-1 hover:bg-[#07262d] hover:text-white"
               >
                 Próxima
@@ -717,7 +783,7 @@ export default function CadastroImoveis() {
         <ModalCadastroImovel
           open={showModal}
           onClose={() => setShowModal(false)}
-          onSave={carregarImoveis}
+          onSave={handleModalSave}
           amenities={amenities}
           categories={categories}
           propertyTypes={propertyTypes}

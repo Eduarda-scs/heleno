@@ -3,10 +3,13 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 import { generateSlug } from "@/utils/slug";
+import LeadModal from "@/components/leadscap";
+
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
+
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -627,6 +630,7 @@ const parsedProperties = filteredProperties.map((property) => {
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
       </Suspense>
+      <LeadModal />
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
         <WhatsAppButton />
       </Suspense>

@@ -16,6 +16,8 @@ import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Users from "lucide-react/dist/esm/icons/users";
 import Waves from "lucide-react/dist/esm/icons/waves";
+import LeadModal from "@/components/leadscap";
+
 
 // Imagens
 import passarela from "@/assets/opt-passarela.webp";
@@ -251,6 +253,7 @@ export default function City() {
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Footer />
       </Suspense>
+      <LeadModal />
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
         <WhatsAppButton />
       </Suspense>
