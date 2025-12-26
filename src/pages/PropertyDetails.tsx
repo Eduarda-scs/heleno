@@ -18,6 +18,8 @@ import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
+import { LeadModal } from "@/components/LeadModal";
+
 
 type MediaType = "image" | "video";
 type MediaTab = "fotos" | "videos";
@@ -40,6 +42,8 @@ const PropertyDetails = () => {
   const [lightboxClosing, setLightboxClosing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<MediaTab>("fotos");
+  const [openLeadModal, setOpenLeadModal] = useState(false);
+
 
   const { toast } = useToast();
   const { currentProperty, clearCurrentProperty } = usePropertyDetailStore();
@@ -716,9 +720,15 @@ const PropertyDetails = () => {
                   </a>
                 </Button>
 
-                <Button variant="hero" size="lg" className="w-full" asChild>
-                  <Link to="/contato">Formulário de Contato</Link>
+                <Button
+                  variant="hero"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => setOpenLeadModal(true)}
+                >
+                  Deixe seu contato
                 </Button>
+
               </div>
             </div>
           </div>
@@ -858,6 +868,12 @@ const PropertyDetails = () => {
           </div>
         </div>
       )}
+      <LeadModal
+        open={openLeadModal}
+        onClose={() => setOpenLeadModal(false)}
+        propertyTitle={property.titulo}
+      />
+
     </div>
   );
 };
