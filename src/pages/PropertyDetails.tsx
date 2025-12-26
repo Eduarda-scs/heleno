@@ -18,7 +18,7 @@ import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
-import { LeadModal } from "@/components/LeadModal";
+import { LeadModal } from "@/components/leadmodal";
 
 
 type MediaType = "image" | "video";
