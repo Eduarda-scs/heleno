@@ -165,71 +165,42 @@ const PropertyDetails = () => {
   };
 
   const fetchProperty = async () => {
-  try {
-    console.log(`[PropertyDetails] 🔄 Buscando imóvel ID: ${id}`);
+    try {
+      setIsInitialized(false);
 
-    // 1️⃣ uniquePropertyData (navegação interna)
-    const uniquePropertyDataStr = localStorage.getItem("uniquePropertyData");
-    if (uniquePropertyDataStr) {
-      const data = JSON.parse(uniquePropertyDataStr);
-      if (data.id?.toString() === id) {
-        setProperty(convertWebhookPropertyToComponentFormat(data));
-        localStorage.removeItem("uniquePropertyData");
-        return;
+      const backendProperty = await getUniquePropertyFromWebhook({
+        event_name: "get_property",
+        property_id: id
+      });
+
+      if (
+        backendProperty &&
+        backendProperty.id &&
+        backendProperty.property_title
+      ) {
+        setProperty(convertWebhookPropertyToComponentFormat(backendProperty));
+      } else {
+        setProperty(null);
       }
+    } catch (e) {
+      setProperty(null);
+    } finally {
+      setIsInitialized(true);
     }
+  };
 
-    // 2️⃣ currentProperty (localStorage)
-    const currentPropertyStr = localStorage.getItem("currentProperty");
-    if (currentPropertyStr) {
-      const data = JSON.parse(currentPropertyStr);
-      if (data.id?.toString() === id) {
-        setProperty(convertWebhookPropertyToComponentFormat(data));
-        return;
-      }
-    }
-
-    // 3️⃣ Zustand store
-    if (currentProperty && currentProperty.id?.toString() === id) {
-      setProperty(convertWebhookPropertyToComponentFormat(currentProperty));
-      return;
-    }
-
-    // 4️⃣ 🚀 BACKEND (ESSENCIAL)
-    const backendProperty = await getUniquePropertyFromWebhook({
-      event_name: "get_property",
-      property_id: id
-    });
-
-    if (backendProperty) {
-      console.log("[PropertyDetails] ✅ Imóvel carregado do backend");
-      setProperty(convertWebhookPropertyToComponentFormat(backendProperty));
-      return;
-    }
-
-    console.log("[PropertyDetails] ❌ Imóvel não encontrado");
-    setProperty(null);
-  } catch (error) {
-    console.error("[PropertyDetails] ❌ Erro:", error);
-    setProperty(null);
-  } finally {
-    setIsInitialized(true);
-  }
-};
 
 
   useEffect(() => {
-    if (!id) return;
+    if (!property || !id) return;
 
-    const timer = setTimeout(() => {
-      if (!isInitialized) {
-        console.log("[PropertyDetails] 🚀 Iniciando carregamento após renderização...");
-        fetchProperty();
-      }
-    }, 100);
+    const correctSlug = generateSlug(property.titulo);
 
-    return () => clearTimeout(timer);
-  }, [id, isInitialized]);
+    if (slug !== correctSlug) {
+      navigate(`/empreendimento/${correctSlug}/${id}`, { replace: true });
+    }
+  }, [property]); // ❗ remover slug/id daqui
+
 
   
 
