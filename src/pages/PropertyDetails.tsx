@@ -172,35 +172,38 @@ const PropertyDetails = () => {
     try {
       setIsInitialized(false);
 
-      // 🔹 ETAPA 1 — localizar o imóvel
-      const listResponse = await getPropertyFromWebhook(1, 1, {
-        id: Number(id),
-      });
+      let foundProperty = null;
+      let page = 1;
 
-      if (!listResponse.properties.length) {
+      while (!foundProperty) {
+        const response = await getPropertyFromWebhook(page, 10);
+
+        if (!response.properties.length) break;
+
+        foundProperty = response.properties.find(
+          (p: any) => Number(p.id) === Number(id)
+        );
+
+        if (foundProperty) break;
+
+        page++;
+      }
+
+      if (!foundProperty) {
         setProperty(null);
         return;
       }
 
-      const baseProperty = listResponse.properties[0];
-
-      // 🔹 ETAPA 2 — buscar dados completos
-      const fullProperty = await getUniquePropertyFromWebhook(baseProperty);
-
-      if (!fullProperty) {
-        setProperty(null);
-        return;
-      }
-
-      // 🔹 converter para o formato do componente
+      const fullProperty = await getUniquePropertyFromWebhook(foundProperty);
       setProperty(convertWebhookPropertyToComponentFormat(fullProperty));
     } catch (error) {
-      console.error("Erro ao buscar imóvel:", error);
+      console.error(error);
       setProperty(null);
     } finally {
       setIsInitialized(true);
     }
   };
+
 
 
 
