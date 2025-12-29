@@ -188,6 +188,11 @@ const PropertyDetails = () => {
       setIsInitialized(true);
     }
   };
+  useEffect(() => {
+    if (!id) return;
+    fetchProperty();
+  }, [id]);
+
 
 
   const openLightbox = (index: number) => {
