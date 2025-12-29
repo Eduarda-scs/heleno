@@ -142,7 +142,7 @@ export const PropertyCard = ({
             />
             <div className="absolute inset-0 bg-black/20" />
             
-            <div className="absolute top-4 left-4 bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold z-20 flex items-center gap-1">
+            <div className="absolute top-4 left-4 bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-bwmodelica z-20 flex items-center gap-1">
               <Play className="w-3 h-3 fill-current" />
               <span>Vídeo</span>
             </div>
@@ -156,20 +156,20 @@ export const PropertyCard = ({
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <div className="text-center text-muted-foreground p-4">
-              <p className="font-semibold">{title}</p>
+              <p className="font-bwmodelica">{title}</p>
               <p className="text-sm mt-2">Imagem não disponível</p>
             </div>
           </div>
         )}
         
         {featured && (
-          <div className="absolute top-4 right-4 bg-secondary text-primary px-3 py-1 rounded-full text-xs font-semibold z-20">
+          <div className="absolute top-4 right-4 bg-secondary text-primary px-3 py-1 rounded-full text-xs font-bwmodelica z-20">
             Destaque
           </div>
         )}
         
         {type && (
-          <div className="absolute top-4 left-4 bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold z-20">
+          <div className="absolute top-4 left-4 bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-bwmodelica z-20">
             {type}
           </div>
         )}

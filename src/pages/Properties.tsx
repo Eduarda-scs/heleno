@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 import { generateSlug } from "@/utils/slug";
 import LeadModal from "@/components/leadscap";
-
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
-
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -32,64 +31,164 @@ interface PropertyType {
   categories: Array<{ category_name: string }>;
 }
 
-interface FilterType {
-  id: number;
-  name: string;
-  type: string;
+interface FilterOption {
+  value: string;
+  label: string;
 }
+
+interface FilterProps {
+  options: FilterOption[];
+  selectedValue: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const Filter = ({ options, selectedValue, onValueChange, placeholder, isOpen, onToggle }: FilterProps) => {
+  const selectedOption = options.find(opt => opt.value === selectedValue);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className="flex items-center justify-between w-full px-4 py-3 bg-background border border-border rounded-lg hover:border-secondary transition-colors duration-200"
+      >
+        <span className={`${selectedValue ? 'text-foreground' : 'text-muted-foreground'}`}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        {isOpen ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onValueChange(option.value);
+              }}
+              className={`w-full text-left px-4 py-3 hover:bg-[#cca77b] transition-colors duration-150 ${
+                selectedValue === option.value
+                  ? 'bg-secondary text-primary font-bwmodelica'
+                  : 'text-foreground'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Properties = () => {
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchName, setSearchName] = useState("");
-  const [propertyStatus, setPropertyStatus] = useState(""); // na-planta | pronto
-  const [priceOrder, setPriceOrder] = useState(""); // asc | desc
 
-
-  
-  // ESTADOS ATUALIZADOS PARA PAGINAÇÃO REAL
   const [properties, setProperties] = useState<PropertyType[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<Array<{ id: number; property_type_name: string }>>([]);
-  
-  // Estados para paginação
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [availableBedrooms, setAvailableBedrooms] = useState<string[]>([]);
+  const [availableGarageSpaces, setAvailableGarageSpaces] = useState<string[]>([]);
+
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [loadingPage, setLoadingPage] = useState<number | null>(null);
 
-  // Função para carregar propriedades com paginação real
-  const loadProperties = async (page = 1, filter = activeFilter) => {
+  const [filters, setFilters] = useState({
+    cidade: "",
+    tipo: "",
+    valor: "",
+    quartos: "",
+    vagas: "",
+  });
+
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+
+  const loadProperties = async (page = 1) => {
     try {
       setIsLoading(true);
       setLoadingPage(page);
-      
-      // Montar filtros para enviar ao backend
-      const backendFilters = filter === "Todos" ? null : { 
-        type: filter 
-      };
-      console.log("beckendfiltres" , backendFilters)
 
-      const response = await getPropertyFromWebhook(page, backendFilters);
-      
+      const backendFilters: any = {};
+
+      if (filters.tipo && filters.tipo !== '') {
+        backendFilters.type = filters.tipo;
+      }
+
+      if (filters.cidade && filters.cidade !== '') {
+        backendFilters.city = filters.cidade;
+      }
+
+      if (filters.quartos && filters.quartos !== '') {
+        backendFilters.bedrooms = filters.quartos;
+      }
+
+      if (filters.vagas && filters.vagas !== '') {
+        backendFilters.garage_spaces = filters.vagas;
+      }
+
+      if (filters.valor && filters.valor !== '') {
+        backendFilters.price = filters.valor;
+      }
+
+      console.log('🔍 [FILTROS] Estado atual dos filtros:', filters);
+      console.log('📤 [FILTROS] Filtros sendo enviados para backend:', backendFilters);
+
+      const filtersToSend = Object.keys(backendFilters).length > 0 ? backendFilters : null;
+
+      console.log(`📡 [PAGINAÇÃO] Buscando página ${page} com filtros:`, filtersToSend);
+
+      const response = await getPropertyFromWebhook(page, filtersToSend);
+
       if (response && response.data) {
+        const validProperties = response.data.filter((prop: any) => {
+          return prop && Object.keys(prop).length > 0 && prop.property_title;
+        });
+
         console.log(`✅ Página ${page} carregada:`, {
           total_items: response.total_items,
           total_pages: response.total_pages,
-          properties_received: response.data.length,
+          properties_received: validProperties.length,
           page_requested: page
         });
-        
-        // Atualiza os estados com a resposta do backend
-        setProperties(response.data || []);
+
+        setProperties(validProperties);
         setTotalPages(response.total_pages || 1);
         setTotalItems(response.total_items || 0);
         setCurrentPage(response.page || page);
-        
-        // Extrai filtros dos property_types
+
         if (response.property_types && response.property_types.length > 0) {
           setPropertyTypes(response.property_types);
+        }
+
+        if (page === 1) {
+          if (response.propertyCities && response.propertyCities.length > 0) {
+            const cities = response.propertyCities.map((city: any) => city.property_city);
+            setAvailableCities(cities);
+          }
+
+          if (response.propertyBedrooms && response.propertyBedrooms.length > 0) {
+            const bedrooms = response.propertyBedrooms
+              .map((b: any) => b.property_bedrooms?.toString())
+              .filter(Boolean);
+            setAvailableBedrooms(bedrooms.sort((a, b) => parseInt(a) - parseInt(b)));
+          }
+
+          if (response.propertyGarageSpaces && response.propertyGarageSpaces.length > 0) {
+            const garageSpaces = response.propertyGarageSpaces
+              .map((g: any) => g.property_garage_spaces?.toString())
+              .filter(Boolean);
+            setAvailableGarageSpaces(garageSpaces.sort((a, b) => parseInt(a) - parseInt(b)));
+          }
         }
       } else {
         console.error("❌ Resposta inválida do backend:", response);
@@ -109,7 +208,6 @@ const Properties = () => {
     }
   };
 
-  // Buscar dados após a renderização completa
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isInitialized) {
@@ -120,51 +218,26 @@ const Properties = () => {
     return () => clearTimeout(timer);
   }, [isInitialized]);
 
-  // Quando mudar o filtro, recarrega a página 1
   useEffect(() => {
     if (isInitialized) {
-      loadProperties(1, activeFilter);
+      console.log('🔄 [FILTROS] Filtros alterados, recarregando página 1:', filters);
+      loadProperties(1);
     }
-  }, [activeFilter]);
+  }, [
+    filters.tipo,
+    filters.cidade,
+    filters.valor,
+    filters.quartos,
+    filters.vagas,
+    isInitialized
+  ]);
 
-const filteredProperties = properties.filter((property) => {
-  // 🔹 FILTRO POR TIPO
-  const matchesFilter =
-    activeFilter === "Todos" ||
-    property.property_types?.some(
-      (type) => type.property_type_name === activeFilter
-    );
-
-  if (!matchesFilter) return false;
-
-  // 🔹 BUSCA GLOBAL (texto livre)
-  if (!searchTerm.trim()) return true;
-
-  const search = searchTerm.toLowerCase();
-
-  const searchableText = `
-    ${property.property_title}
-    ${property.property_city}
-    ${property.property_price}
-    ${property.property_area_sqm}
-    ${property.property_types?.map(t => t.property_type_name).join(" ")}
-    ${property.categories?.map(c => c.category_name).join(" ")}
-    ${property.amenities?.map(a => a.amenitie_name).join(" ")}
-  `.toLowerCase();
-
-  return searchableText.includes(search);
-});
-
-
-
-  // Converter dados para o formato esperado pelo PropertyCard
-const parsedProperties = filteredProperties.map((property) => {
-    // Encontra a imagem de capa (is_cover: true) ou usa a primeira imagem
-    const coverImage = property.images?.find(img => img.is_cover)?.url || 
+  const parsedProperties = properties.map((property) => {
+    const coverImage = property.images?.find(img => img.is_cover)?.url ||
                       property.images?.[0]?.url || "";
-    
+
     const propertyTypesArray = property.property_types || [];
-    
+
     const slug = generateSlug(property.property_title || "");
 
     return {
@@ -183,69 +256,106 @@ const parsedProperties = filteredProperties.map((property) => {
       categories: propertyTypesArray.map(type => type.property_type_name) || [],
       amenities: property.amenities?.map(a => a.amenitie_name) || [],
       property_categories: property.categories?.map(c => c.category_name) || [],
-      propertyData: { 
-        properties: properties, 
-        property_types: propertyTypesArray 
+      propertyData: {
+        properties: properties,
+        property_types: propertyTypesArray
       }
     };
   });
-  
 
-  // Obter filtros dinamicamente dos property_types
-  const filters = propertyTypes.length > 0
-    ? ["Todos", ...propertyTypes.map(type => type.property_type_name)]
-    : ["Todos"]; 
-    
-
-  // Funções de navegação
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      loadProperties(currentPage + 1, activeFilter);
+      loadProperties(currentPage + 1);
     }
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
-      loadProperties(currentPage - 1, activeFilter);
+      loadProperties(currentPage - 1);
     }
   };
 
-  // Função para ir para uma página específica
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
-      loadProperties(page, activeFilter);
+      loadProperties(page);
     }
   };
 
-  // Gerar array de páginas para exibição (máximo 5 páginas)
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
-    
+
     if (totalPages <= maxVisible) {
-      // Mostrar todas as páginas
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Lógica para mostrar páginas próximas à atual
       let start = Math.max(1, currentPage - 2);
       let end = Math.min(totalPages, start + maxVisible - 1);
-      
-      // Ajustar start se end estiver no limite
+
       if (end === totalPages) {
         start = totalPages - maxVisible + 1;
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   };
 
-  // Mostrar loading enquanto carrega
+  const handleFilterToggle = (filterName: string) => {
+    setOpenFilter(openFilter === filterName ? null : filterName);
+  };
+
+  const handleFilterChange = (filterName: string, value: string) => {
+    console.log(`🎯 [FILTRO] Alterando ${filterName}: ${value}`);
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+    setOpenFilter(null);
+  };
+
+  const cidadeOptions: FilterOption[] = [
+    { value: '', label: 'Todas as cidades' },
+    ...availableCities.map(city => ({
+      value: city,
+      label: city
+    }))
+  ];
+
+  const tipoOptions: FilterOption[] = [
+    { value: '', label: 'Todos os tipos' },
+    ...propertyTypes.map(type => ({
+      value: type.property_type_name,
+      label: type.property_type_name
+    }))
+  ];
+
+  const valorOptions: FilterOption[] = [
+    { value: '', label: 'Todos os preços' },
+    { value: 'ate-500k', label: 'Até R$ 500 mil' },
+    { value: 'ate-1m', label: 'Até R$ 1 milhão' },
+    { value: 'ate-2m', label: 'Até R$ 2 milhões' },
+    { value: 'ate-5m', label: 'Até R$ 5 milhões' },
+    { value: 'acima-5m', label: 'Acima de R$ 5 milhões' },
+  ];
+
+  const quartosOptions: FilterOption[] = [
+    { value: '', label: 'Quantidade de quartos' },
+    ...availableBedrooms.map(bedroom => ({
+      value: bedroom,
+      label: `${bedroom} quarto${parseInt(bedroom) > 1 ? 's' : ''}`
+    }))
+  ];
+
+  const vagasOptions: FilterOption[] = [
+    { value: '', label: 'Quantidade de vagas' },
+    ...availableGarageSpaces.map(space => ({
+      value: space,
+      label: `${space} vaga${parseInt(space) > 1 ? 's' : ''}`
+    }))
+  ];
+
   if (isLoading && !isInitialized) {
     return (
       <div className="min-h-screen bg-background">
@@ -253,7 +363,6 @@ const parsedProperties = filteredProperties.map((property) => {
           <Header />
         </Suspense>
 
-        {/* HERO - Versão simplificada para loading */}
         <section className="relative h-[65vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0">
             <img
@@ -265,7 +374,6 @@ const parsedProperties = filteredProperties.map((property) => {
             />
           </div>
 
-          {/* 🔑 ISSO resolve a cor estranha */}
           <div className="absolute inset-0 bg-black/40" />
 
           <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
@@ -279,8 +387,6 @@ const parsedProperties = filteredProperties.map((property) => {
           </div>
         </section>
 
-
-        {/* CONTEÚDO LOADING */}
         <section className="py-16 bg-background">
           <div className="container mx-auto px-4 lg:px-8">
             <div className="text-center py-16">
@@ -308,7 +414,6 @@ const parsedProperties = filteredProperties.map((property) => {
         <Header />
       </Suspense>
 
-      {/* HERO */}
       <section className="relative h-[65vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
             <img
@@ -320,7 +425,6 @@ const parsedProperties = filteredProperties.map((property) => {
             />
           </div>
 
-          {/* 🔑 ISSO resolve a cor estranha */}
           <div className="absolute inset-0 bg-black/40" />
 
           <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
@@ -331,93 +435,70 @@ const parsedProperties = filteredProperties.map((property) => {
             <p className="text-base md:text-2xl text-primary-foreground/90">
               Encontre o imóvel perfeito para você em Balneário Camboriú
             </p>
-          
-          {/* Contador de propriedades */}
-          <div className="mt-6 text-sm md:text-base text-primary-foreground/80">
-            {totalItems > 0 ? (
-              <span>
-                <span className="text-secondary font-semibold">{totalItems}</span> empreendimentos disponíveis
-                <span className="mx-2">•</span>
-                Página <span className="text-secondary font-semibold">{currentPage}</span> de <span className="text-secondary font-semibold">{totalPages}</span>
-              </span>
-            ) : (
-              <span>Nenhum empreendimento disponível no momento</span>
-            )}
-          </div>
         </div>
       </section>
 
-      {/* BARRA DE PESQUISA AVANÇADA */}
-      <section className="py-8 bg-luxury-bg border-b border-border">
-        <div className="container mx-auto px-4 lg:px-8">
-          
-          <div className="mx-auto max-w-6xl bg-background/80 backdrop-blur-md border border-border rounded-2xl shadow-sm px-4 py-4 lg:px-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center font-bwmodelica">
+      <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border">
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={cidadeOptions}
+                selectedValue={filters.cidade}
+                onValueChange={(value) => handleFilterChange('cidade', value)}
+                placeholder="Cidade"
+                isOpen={openFilter === 'cidade'}
+                onToggle={() => handleFilterToggle('cidade')}
+              />
+            </div>
 
-              {/* Nome do imóvel */}
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                  🏢
-                </span>
-                <input
-                  type="text"
-                  placeholder="Buscar empreendimento"
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition"
-                />
-              </div>
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={tipoOptions}
+                selectedValue={filters.tipo}
+                onValueChange={(value) => handleFilterChange('tipo', value)}
+                placeholder="Tipo de imóvel"
+                isOpen={openFilter === 'tipo'}
+                onToggle={() => handleFilterToggle('tipo')}
+              />
+            </div>
 
-              {/* Status */}
-              <div className="relative w-full lg:w-52">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                  🏗️
-                </span>
-                <select
-                  value={propertyStatus}
-                  onChange={(e) => setPropertyStatus(e.target.value)}
-                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition appearance-none"
-                >
-                  <option value="">Na planta / Pronto</option>
-                  <option value="na planta">Na planta</option>
-                  <option value="pronto">Pronto</option>
-                </select>
-              </div>
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={valorOptions}
+                selectedValue={filters.valor}
+                onValueChange={(value) => handleFilterChange('valor', value)}
+                placeholder="Qualquer Valor"
+                isOpen={openFilter === 'valor'}
+                onToggle={() => handleFilterToggle('valor')}
+              />
+            </div>
 
-              {/* Valor */}
-              <div className="relative w-full lg:w-48">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                  💰
-                </span>
-                <select
-                  value={priceOrder}
-                  onChange={(e) => setPriceOrder(e.target.value)}
-                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary transition appearance-none"
-                >
-                  <option value="">Valor</option>
-                  <option value="asc">Menor preço</option>
-                  <option value="desc">Maior preço</option>
-                </select>
-              </div>
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={quartosOptions}
+                selectedValue={filters.quartos}
+                onValueChange={(value) => handleFilterChange('quartos', value)}
+                placeholder="Quartos"
+                isOpen={openFilter === 'quartos'}
+                onToggle={() => handleFilterToggle('quartos')}
+              />
+            </div>
 
-              {/* Botão pesquisar */}
-              <Button
-                variant="gold"
-                className="h-12 px-8 rounded-xl text-sm font-semibold tracking-wide shadow-md hover:shadow-lg transition-all"
-              >
-                🔍 Buscar
-              </Button>
-
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={vagasOptions}
+                selectedValue={filters.vagas}
+                onValueChange={(value) => handleFilterChange('vagas', value)}
+                placeholder="Vagas"
+                isOpen={openFilter === 'vagas'}
+                onToggle={() => handleFilterToggle('vagas')}
+              />
             </div>
           </div>
-
         </div>
       </section>
 
-
-
-
-      {/* DESKTOP - PAGINAÇÃO REAL */}
       <section className="py-16 bg-background hidden md:block">
         <div className="container mx-auto px-4 lg:px-8">
           {isLoading && loadingPage === currentPage ? (
@@ -433,28 +514,34 @@ const parsedProperties = filteredProperties.map((property) => {
           ) : properties.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-muted-foreground mb-4">
-                {totalItems === 0 
+                {totalItems === 0
                   ? "Nenhum empreendimento disponível no momento."
                   : "Nenhum empreendimento encontrado com este filtro."
                 }
               </p>
-              {activeFilter !== "Todos" && (
-                <Button
-                  variant="outline"
-                  onClick={() => setActiveFilter("Todos")}
-                  className="mt-4"
-                >
-                  Ver Todos os Empreendimentos
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFilters({
+                    cidade: "",
+                    tipo: "",
+                    valor: "",
+                    quartos: "",
+                    vagas: "",
+                  });
+                  setCurrentPage(1);
+                  loadProperties(1);
+                }}
+                className="mt-4 hover:bg-[#07262d] hover:text-primary-foreground"
+              >
+                Limpar Filtros
+              </Button>
             </div>
           ) : (
             <>
-              
-              {/* GRID DE IMÓVEIS - EXATAMENTE 8 POR PÁGINA */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
                 {parsedProperties.map((property, index) => (
-                  <div 
+                  <div
                     key={`${property.id}-page-${currentPage}-${index}`}
                     className="animate-fade-up"
                     style={{ animationDelay: `${index * 50}ms` }}
@@ -464,24 +551,19 @@ const parsedProperties = filteredProperties.map((property) => {
                 ))}
               </div>
 
-              {/* PAGINAÇÃO REAL DESKTOP */}
               {totalPages > 1 && (
                 <div className="flex flex-col items-center gap-6 mt-12 pt-8 border-t border-border">
-                  
-                  {/* Controles de paginação */}
                   <div className="flex items-center justify-center gap-2">
-                    {/* Botão Anterior */}
                     <Button
                       variant="outline"
                       onClick={goToPrevPage}
                       disabled={currentPage === 1 || isLoading}
-                      className="flex items-center gap-2 min-w-32"
+                      className="flex items-center gap-2 min-w-32 hover:bg-[#07262d] hover:text-primary-foreground"
                     >
                       <span>←</span>
                       Anterior
                     </Button>
 
-                    {/* Números das páginas */}
                     <div className="flex items-center gap-1 mx-4">
                       {getPageNumbers().map((pageNum) => (
                         <Button
@@ -489,17 +571,16 @@ const parsedProperties = filteredProperties.map((property) => {
                           variant={currentPage === pageNum ? "gold" : "outline"}
                           onClick={() => goToPage(pageNum)}
                           disabled={isLoading}
-                          className={`min-w-10 h-10 px-0 ${
-                            currentPage === pageNum 
-                              ? "font-bold shadow-md" 
-                              : "hover:bg-accent"
+                          className={`min-w-10 h-10 px-0 hover:bg-[#07262d] hover:text-primary-foreground ${
+                            currentPage === pageNum
+                              ? "font-bwmodelica shadow-md"
+                              : ""
                           }`}
                         >
                           {pageNum}
                         </Button>
                       ))}
-                      
-                      {/* Elipsis se houver muitas páginas */}
+
                       {totalPages > 5 && currentPage < totalPages - 2 && (
                         <>
                           <span className="px-2 text-muted-foreground">...</span>
@@ -507,7 +588,7 @@ const parsedProperties = filteredProperties.map((property) => {
                             variant="outline"
                             onClick={() => goToPage(totalPages)}
                             disabled={isLoading}
-                            className="min-w-10 h-10 px-0"
+                            className="min-w-10 h-10 px-0 hover:bg-[#07262d] hover:text-primary-foreground"
                           >
                             {totalPages}
                           </Button>
@@ -515,19 +596,17 @@ const parsedProperties = filteredProperties.map((property) => {
                       )}
                     </div>
 
-                    {/* Botão Próxima */}
                     <Button
                       variant="outline"
                       onClick={goToNextPage}
                       disabled={currentPage === totalPages || isLoading}
-                      className="flex items-center gap-2 min-w-32"
+                      className="flex items-center gap-2 min-w-32 hover:bg-[#07262d] hover:text-primary-foreground"
                     >
                       Próxima
                       <span>→</span>
                     </Button>
                   </div>
-                  
-                  {/* Indicador de página */}
+
                   <div className="text-xs text-muted-foreground">
                     Página {currentPage} de {totalPages} • {totalItems} imóveis no total
                   </div>
@@ -538,7 +617,6 @@ const parsedProperties = filteredProperties.map((property) => {
         </div>
       </section>
 
-      {/* MOBILE - COM PAGINAÇÃO REAL */}
       <section className="py-16 bg-background md:hidden">
         <div className="container mx-auto px-4">
           {isLoading ? (
@@ -551,46 +629,52 @@ const parsedProperties = filteredProperties.map((property) => {
           ) : properties.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-muted-foreground mb-4">
-                {totalItems === 0 
+                {totalItems === 0
                   ? "Nenhum empreendimento disponível no momento."
                   : "Nenhum empreendimento encontrado com este filtro."
                 }
               </p>
-              {activeFilter !== "Todos" && (
-                <Button
-                  variant="outline"
-                  onClick={() => setActiveFilter("Todos")}
-                  className="mt-4"
-                >
-                  Ver Todos os Empreendimentos
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFilters({
+                    cidade: "",
+                    tipo: "",
+                    valor: "",
+                    quartos: "",
+                    vagas: "",
+                  });
+                  setCurrentPage(1);
+                  loadProperties(1);
+                }}
+                className="mt-4 hover:bg-[#07262d] hover:text-primary-foreground"
+              >
+                Limpar Filtros
+              </Button>
             </div>
           ) : (
             <>
-              {/* INFO DA PAGINAÇÃO MOBILE */}
               <div className="mb-6 text-center">
                 <div className="bg-luxury-bg px-4 py-2 rounded-lg inline-block">
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">{properties.length}</span> de{" "}
-                    <span className="font-semibold text-foreground">{totalItems}</span> imóveis
+                    <span className="font-bwmodelica text-foreground">{properties.length}</span> de{" "}
+                    <span className="font-bwmodelica text-foreground">{totalItems}</span> imóveis
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Página <span className="font-semibold">{currentPage}</span> de{" "}
-                    <span className="font-semibold">{totalPages}</span>
+                    Página <span className="font-bwmodelica">{currentPage}</span> de{" "}
+                    <span className="font-bwmodelica">{totalPages}</span>
                   </p>
                 </div>
               </div>
-              
-              {/* Swiper para mobile - MOSTRA OS 8 IMÓVEIS DA PÁGINA */}
+
               <Swiper
                 slidesPerView={1.1}
                 spaceBetween={16}
                 className="pb-10"
                 navigation={false}
-                pagination={{ 
+                pagination={{
                   clickable: true,
-                  dynamicBullets: true 
+                  dynamicBullets: true
                 }}
               >
                 {parsedProperties.map((property, index) => (
@@ -600,42 +684,39 @@ const parsedProperties = filteredProperties.map((property) => {
                 ))}
               </Swiper>
 
-              {/* Paginação mobile */}
               {totalPages > 1 && (
                 <div className="flex flex-col items-center gap-4 mt-8">
-                  {/* Controles mobile */}
                   <div className="flex items-center justify-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={goToPrevPage}
                       disabled={currentPage === 1 || isLoading}
-                      className="text-xs min-w-24"
+                      className="text-xs min-w-24 hover:bg-[#07262d] hover:text-primary-foreground"
                     >
                       ← Anterior
                     </Button>
-                    
+
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">
+                      <span className="text-sm font-bwmodelica text-foreground">
                         {currentPage}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         de {totalPages}
                       </span>
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={goToNextPage}
                       disabled={currentPage === totalPages || isLoading}
-                      className="text-xs min-w-24"
+                      className="text-xs min-w-24 hover:bg-[#07262d] hover:text-primary-foreground"
                     >
                       Próxima →
                     </Button>
                   </div>
-                  
-                  {/* Seletor de página mobile */}
+
                   <div className="w-full max-w-xs">
                     <div className="text-xs text-center text-muted-foreground mb-2">
                       Ir para página:
@@ -646,10 +727,10 @@ const parsedProperties = filteredProperties.map((property) => {
                           key={`mobile-page-${pageNum}`}
                           onClick={() => goToPage(pageNum)}
                           disabled={isLoading}
-                          className={`w-8 h-8 rounded-md text-xs ${
+                          className={`w-8 h-8 rounded-md text-xs hover:bg-[#07262d] hover:text-primary-foreground ${
                             currentPage === pageNum
-                              ? 'bg-secondary text-primary font-bold'
-                              : 'bg-luxury-bg text-foreground hover:bg-accent'
+                              ? 'bg-secondary text-primary font-bwmodelica'
+                              : 'bg-luxury-bg text-foreground'
                           }`}
                         >
                           {pageNum}
