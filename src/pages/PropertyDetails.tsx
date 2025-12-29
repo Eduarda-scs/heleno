@@ -190,20 +190,6 @@ const PropertyDetails = () => {
   };
 
 
-
-  useEffect(() => {
-    if (!property || !id) return;
-
-    const correctSlug = generateSlug(property.titulo);
-
-    if (slug !== correctSlug) {
-      navigate(`/empreendimento/${correctSlug}/${id}`, { replace: true });
-    }
-  }, [property]); // ❗ remover slug/id daqui
-
-
-  
-
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
