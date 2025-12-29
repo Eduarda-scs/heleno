@@ -19,6 +19,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
 import { LeadModal } from "@/components/leadmodal";
+import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
+
 
 
 type MediaType = "image" | "video";
@@ -163,59 +165,58 @@ const PropertyDetails = () => {
   };
 
   const fetchProperty = async () => {
-    try {
-      console.log(`[PropertyDetails] 🔄 Buscando imóvel ID: ${id}`);
+  try {
+    console.log(`[PropertyDetails] 🔄 Buscando imóvel ID: ${id}`);
 
-      const uniquePropertyDataStr = localStorage.getItem("uniquePropertyData");
-
-      if (uniquePropertyDataStr) {
-        try {
-          const uniquePropertyData = JSON.parse(uniquePropertyDataStr);
-          console.log("[PropertyDetails] ✅ Dados encontrados do webhook/uniqueITEM:", uniquePropertyData);
-
-          if (uniquePropertyData.id?.toString() === id) {
-            const convertedProperty = convertWebhookPropertyToComponentFormat(uniquePropertyData);
-            setProperty(convertedProperty);
-            localStorage.removeItem("uniquePropertyData");
-            return;
-          }
-        } catch (e) {
-          console.error("[PropertyDetails] ❌ Erro ao parsear uniquePropertyData:", e);
-        }
-      }
-
-      const currentPropertyStr = localStorage.getItem("currentProperty");
-      if (currentPropertyStr) {
-        try {
-          const currentPropertyData = JSON.parse(currentPropertyStr);
-          console.log("[PropertyDetails] ✅ Dados encontrados do localStorage:", currentPropertyData);
-
-          if (currentPropertyData.id?.toString() === id) {
-            const convertedProperty = convertWebhookPropertyToComponentFormat(currentPropertyData);
-            setProperty(convertedProperty);
-            return;
-          }
-        } catch (e) {
-          console.error("[PropertyDetails] ❌ Erro ao parsear currentProperty:", e);
-        }
-      }
-
-      if (currentProperty && currentProperty.id?.toString() === id) {
-        console.log(`[PropertyDetails] ✅ Encontrado no store: ${currentProperty.property_title}`);
-        const convertedProperty = convertWebhookPropertyToComponentFormat(currentProperty);
-        setProperty(convertedProperty);
+    // 1️⃣ uniquePropertyData (navegação interna)
+    const uniquePropertyDataStr = localStorage.getItem("uniquePropertyData");
+    if (uniquePropertyDataStr) {
+      const data = JSON.parse(uniquePropertyDataStr);
+      if (data.id?.toString() === id) {
+        setProperty(convertWebhookPropertyToComponentFormat(data));
+        localStorage.removeItem("uniquePropertyData");
         return;
       }
-
-      console.log(`[PropertyDetails] ❌ Imóvel não encontrado`);
-      setProperty(null);
-    } catch (error) {
-      console.error("[PropertyDetails] ❌ Erro ao buscar imóvel:", error);
-      setProperty(null);
-    } finally {
-      setIsInitialized(true);
     }
-  };
+
+    // 2️⃣ currentProperty (localStorage)
+    const currentPropertyStr = localStorage.getItem("currentProperty");
+    if (currentPropertyStr) {
+      const data = JSON.parse(currentPropertyStr);
+      if (data.id?.toString() === id) {
+        setProperty(convertWebhookPropertyToComponentFormat(data));
+        return;
+      }
+    }
+
+    // 3️⃣ Zustand store
+    if (currentProperty && currentProperty.id?.toString() === id) {
+      setProperty(convertWebhookPropertyToComponentFormat(currentProperty));
+      return;
+    }
+
+    // 4️⃣ 🚀 BACKEND (ESSENCIAL)
+    const backendProperty = await getUniquePropertyFromWebhook({
+      event_name: "get_property",
+      property_id: id
+    });
+
+    if (backendProperty) {
+      console.log("[PropertyDetails] ✅ Imóvel carregado do backend");
+      setProperty(convertWebhookPropertyToComponentFormat(backendProperty));
+      return;
+    }
+
+    console.log("[PropertyDetails] ❌ Imóvel não encontrado");
+    setProperty(null);
+  } catch (error) {
+    console.error("[PropertyDetails] ❌ Erro:", error);
+    setProperty(null);
+  } finally {
+    setIsInitialized(true);
+  }
+};
+
 
   useEffect(() => {
     if (!id) return;
