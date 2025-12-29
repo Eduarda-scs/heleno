@@ -19,7 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
 import { LeadModal } from "@/components/leadmodal";
-import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
+import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 
 
 
@@ -168,26 +168,25 @@ const PropertyDetails = () => {
     try {
       setIsInitialized(false);
 
-      const backendProperty = await getUniquePropertyFromWebhook({
-        event_name: "get_property",
-        property_id: id
+      const response = await getPropertyFromWebhook(1, 1, {
+        id: Number(id)
       });
 
-      if (
-        backendProperty &&
-        backendProperty.id &&
-        backendProperty.property_title
-      ) {
-        setProperty(convertWebhookPropertyToComponentFormat(backendProperty));
+      if (response.properties.length > 0) {
+        setProperty(convertWebhookPropertyToComponentFormat(response.properties[0]));
       } else {
         setProperty(null);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Erro ao buscar imóvel:", error);
       setProperty(null);
     } finally {
       setIsInitialized(true);
     }
   };
+
+
+  
   useEffect(() => {
     if (!id) return;
     fetchProperty();
