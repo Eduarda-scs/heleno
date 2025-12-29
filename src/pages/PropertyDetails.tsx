@@ -19,7 +19,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
 import { LeadModal } from "@/components/leadmodal";
-import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
+import {
+  getPropertyFromWebhook,
+  getUniquePropertyFromWebhook,
+} from "@/hooks/Admin/ClientProperty";
+
 
 
 
@@ -168,15 +172,28 @@ const PropertyDetails = () => {
     try {
       setIsInitialized(false);
 
-      const response = await getPropertyFromWebhook(1, 1, {
-        id: Number(id)
+      // 🔹 ETAPA 1 — localizar o imóvel
+      const listResponse = await getPropertyFromWebhook(1, 1, {
+        id: Number(id),
       });
 
-      if (response.properties.length > 0) {
-        setProperty(convertWebhookPropertyToComponentFormat(response.properties[0]));
-      } else {
+      if (!listResponse.properties.length) {
         setProperty(null);
+        return;
       }
+
+      const baseProperty = listResponse.properties[0];
+
+      // 🔹 ETAPA 2 — buscar dados completos
+      const fullProperty = await getUniquePropertyFromWebhook(baseProperty);
+
+      if (!fullProperty) {
+        setProperty(null);
+        return;
+      }
+
+      // 🔹 converter para o formato do componente
+      setProperty(convertWebhookPropertyToComponentFormat(fullProperty));
     } catch (error) {
       console.error("Erro ao buscar imóvel:", error);
       setProperty(null);
@@ -184,6 +201,7 @@ const PropertyDetails = () => {
       setIsInitialized(true);
     }
   };
+
 
 
   
