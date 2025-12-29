@@ -231,11 +231,7 @@ const PropertyDetails = () => {
     return () => clearTimeout(timer);
   }, [id, isInitialized]);
 
-  useEffect(() => {
-    return () => {
-      clearCurrentProperty();
-    };
-  }, [clearCurrentProperty]);
+  
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
