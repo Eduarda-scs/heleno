@@ -2,25 +2,57 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const properties = Array.from({ length: 6 }).map((_, i) => ({
-  id: i + 1,
-  title: [
-    "Blue Coast",
-    "Blue VIew",
-    "Scnarium",
-    "Senna Tower",
-    "Garden Park",
-    "FG empreendimento",
-  ][i],
-  image: [
-    "/opt-frentemar.webp",
-    "/opt-planta.webp",
-    "/opt-fgempreendimento.webp",
-    "/opt-luxo.webp",
-    "/opt-localidade.webp",
-    "/opt-fg-innovation.webp",
-  ][i],
-}));
+const properties = [
+  {
+    id: 1,
+    title: "Blue Coast",
+    slug: "blue-coast-tower/201",
+    image: "/opt-frentemar.webp",
+    redirectToList: false, // 👈 vai para /empreendimentos
+
+  },
+  {
+    id: 2,
+    title: "Blue View",
+    slug: "blue-view",
+    image: "/opt-planta.webp",
+    redirectToList: true, // 👈 vai para /empreendimentos
+
+  },
+  {
+    id: 3,
+    title: "Scnarium",
+    slug: "scnarium",
+    image: "/opt-fgempreendimento.webp",
+    redirectToList: true, // 👈 vai para /empreendimentos
+
+  },
+  {
+    id: 242,
+    title: "Senna Tower",
+    slug: "senna-tower-o-apice-do-luxo-residencial-no-mundo/242",
+    image: "/opt-luxo.webp",
+    redirectToList: false, // 👈 vai para /empreendimentos
+
+  },
+  {
+    id: 5,
+    title: "Garden Park",
+    slug: "garden-park-home-club/196",
+    image: "/opt-localidade.webp",
+    redirectToList: false, // 👈 vai para /empreendimentos
+
+  },
+  {
+    id: 6,
+    title: "FG Empreendimento",
+    slug: "",
+    image: "/opt-fg-innovation.webp",
+    redirectToList: true, // 👈 vai para /empreendimentos
+
+  },
+];
+
 
 const FeaturedProperties = () => {
   return (
@@ -105,9 +137,15 @@ const FeaturedProperties = () => {
           {properties.map((property) => (
             <Link
               key={property.id}
-              to="/empreendimentos"
+              to={
+                property.redirectToList
+                  ? "/empreendimentos"
+                  : `/empreendimento/${property.slug}`
+              }
               className="flex-item"
             >
+
+
               <img src={property.image} alt={property.title} />
               <div className="card-title">
                 <h3 className="text-xs font-medium text-white">
