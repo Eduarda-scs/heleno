@@ -100,7 +100,20 @@ export default function CadastroImoveis() {
   async function carregarImoveis(page: number = 1, limit: number = 5) {
     setIsLoadingProperties(true);
     try {
-      const retorno = await getPropertyFromWebhook(page, limit);
+      const backendFilters: any = {};
+
+      if (filtroCriadoPor && filtroCriadoPor !== 'todos') {
+        backendFilters.created_by = filtroCriadoPor;
+      }
+
+      console.log('🔍 [FILTROS ADMIN] Estado atual do filtro:', filtroCriadoPor);
+      console.log('📤 [FILTROS ADMIN] Filtros sendo enviados para backend:', backendFilters);
+
+      const filtersToSend = Object.keys(backendFilters).length > 0 ? backendFilters : null;
+
+      console.log(`📡 [PAGINAÇÃO ADMIN] Buscando página ${page} com filtros:`, filtersToSend);
+
+      const retorno = await getPropertyFromWebhook(page, limit, filtersToSend);
       console.log("[Cadastroimoveis] 📌 Retorno:", retorno);
 
       if (retorno) {
@@ -162,6 +175,14 @@ export default function CadastroImoveis() {
 
     return () => clearTimeout(timer);
   }, [isInitialized]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      console.log('🔄 [FILTROS ADMIN] Filtro alterado, recarregando página 1:', filtroCriadoPor);
+      setCurrentPage(1);
+      carregarImoveis(1, itemsPerPage);
+    }
+  }, [filtroCriadoPor, isInitialized]);
 
   const handleSelect = (id: number) => {
     setSelecionados((prev) =>
@@ -352,11 +373,7 @@ export default function CadastroImoveis() {
 
   const imoveisFiltrados = imoveis.filter((i) => {
     const buscaMatch = i.property_title?.toLowerCase().includes(busca.toLowerCase());
-
-    const criadoPor = getCriadoPorTipo(i);
-    const criadoPorMatch = filtroCriadoPor === "todos" || criadoPor === filtroCriadoPor;
-
-    return buscaMatch && criadoPorMatch;
+    return buscaMatch;
   });
 
   const goToNextPage = () => {
@@ -382,6 +399,11 @@ export default function CadastroImoveis() {
 
   const handleModalSave = () => {
     carregarImoveis(currentPage, itemsPerPage);
+  };
+
+  const handleFilterChange = (filterValue: string) => {
+    console.log(`🎯 [FILTRO ADMIN] Alterando filtro para: ${filterValue}`);
+    setFiltroCriadoPor(filterValue);
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -444,7 +466,7 @@ export default function CadastroImoveis() {
                 <Button
                   variant={filtroCriadoPor === "todos" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFiltroCriadoPor("todos")}
+                  onClick={() => handleFilterChange("todos")}
                   className="hover:bg-[#07262d] hover:text-white"
                 >
                   Todos
@@ -453,7 +475,7 @@ export default function CadastroImoveis() {
                   variant={filtroCriadoPor === "admin" ? "default" : "outline"}
                   size="sm"
                   className="flex items-center gap-2 hover:bg-[#07262d] hover:text-white"
-                  onClick={() => setFiltroCriadoPor("admin")}
+                  onClick={() => handleFilterChange("admin")}
                 >
                   <Shield className="h-4 w-4" /> Admin
                 </Button>
@@ -461,7 +483,7 @@ export default function CadastroImoveis() {
                   variant={filtroCriadoPor === "api" ? "default" : "outline"}
                   size="sm"
                   className="flex items-center gap-2 bg-purple-50 text-purple-700 hover:bg-[#07262d] hover:text-white border-purple-200"
-                  onClick={() => setFiltroCriadoPor("api")}
+                  onClick={() => handleFilterChange("api")}
                 >
                   <span className="font-bold">API</span> Sistema
                 </Button>
@@ -474,7 +496,7 @@ export default function CadastroImoveis() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setFiltroCriadoPor("todos")}
+                  onClick={() => handleFilterChange("todos")}
                   className="h-8 hover:bg-[#07262d] hover:text-white"
                 >
                   Limpar filtro
@@ -597,7 +619,7 @@ export default function CadastroImoveis() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setFiltroCriadoPor("todos");
+                                  handleFilterChange("todos");
                                   setBusca("");
                                 }}
                                 className="hover:bg-[#07262d] hover:text-white"
@@ -711,7 +733,7 @@ export default function CadastroImoveis() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setFiltroCriadoPor("todos");
+                            handleFilterChange("todos");
                             setBusca("");
                           }}
                           className="hover:bg-[#07262d] hover:text-white"

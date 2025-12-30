@@ -1,0 +1,47 @@
+functionsDirectory = "C:\\Users\\b_lor\\Documents\\W.U.T - Novo\\Frontend\\Heleno Alves\\Eduarda\\2025-12-28\\netlify\\functions"
+functionsDirectoryOrigin = "default"
+redirectsOrigin = "config"
+plugins = []
+headers = []
+
+[build]
+edge_functions = "C:\\Users\\b_lor\\Documents\\W.U.T - Novo\\Frontend\\Heleno Alves\\Eduarda\\2025-12-28\\netlify\\edge-functions"
+publish = "C:\\Users\\b_lor\\Documents\\W.U.T - Novo\\Frontend\\Heleno Alves\\Eduarda\\2025-12-28\\dist"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "npm run build"
+functions = "C:\\Users\\b_lor\\Documents\\W.U.T - Novo\\Frontend\\Heleno Alves\\Eduarda\\2025-12-28\\netlify\\functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[edge_functions]]
+function = "og-image"
+path = "/empreendimento/*"
+
+[functions]
+
+[functions."*"]
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
