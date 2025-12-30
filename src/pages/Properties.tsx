@@ -65,11 +65,7 @@ const Filter = ({ options, selectedValue, onValueChange, placeholder, isOpen, on
       </button>
 
       {isOpen && (
-<<<<<<< HEAD
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-xl z-[10] max-h-60 overflow-y-auto">
-=======
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto">
->>>>>>> 9b03a4465d49112889dcfca322f9b5867fd1c9cf
           {options.map((option) => (
             <button
               key={option.value}
