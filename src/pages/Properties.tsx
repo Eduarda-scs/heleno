@@ -440,9 +440,9 @@ const Properties = () => {
 
 
       <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-40">
-=======
+
       <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-50">
->>>>>>> 9b03a4465d49112889dcfca322f9b5867fd1c9cf
+
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border">
             <div className="flex-1 min-w-[200px]">
