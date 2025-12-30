@@ -100,6 +100,7 @@ export default function CadastroImoveis() {
   const [isInitialized, setIsInitialized] = useState(false);
   const { getCategoryAmenitie } = useCategoryAmenitie();
 
+
   async function carregarImoveis(page: number = 1, limit: number = 5) {
     setIsLoadingProperties(true);
     try {
@@ -109,64 +110,46 @@ export default function CadastroImoveis() {
         backendFilters.created_by = filtroCriadoPor;
       }
 
-      
+      console.log('🔍 [FILTROS ADMIN] Estado atual do filtro:', filtroCriadoPor);
+      console.log('📤 [FILTROS ADMIN] Filtros sendo enviados para backend:', backendFilters);
 
       const filtersToSend = Object.keys(backendFilters).length > 0 ? backendFilters : null;
 
-    
+      console.log(`📡 [PAGINAÇÃO ADMIN] Buscando página ${page} com filtros:`, filtersToSend);
 
       const retorno = await getPropertyFromWebhook(page, limit, filtersToSend);
-     
+      console.log("[Cadastroimoveis] 📌 Retorno:", retorno);
 
       if (retorno) {
+        if (retorno.properties) {
+          setImoveis(retorno.properties);
+        } else {
+          setImoveis([]);
+        }
+
+        
 
         setTotalPages(retorno.total_pages || 1);
         setTotalItems(retorno.total_items || 0);
         setCurrentPage(retorno.page || page);
       } else {
         setImoveis([]);
+        
         setTotalPages(1);
         setTotalItems(0);
       }
     } catch (error) {
       console.error("Erro ao carregar imóveis:", error);
       setImoveis([]);
-      setAmenities([]);
-      setCategories([]);
-      setPropertyTypes([]);
       setTotalPages(1);
       setTotalItems(0);
     } finally {
       setIsLoadingProperties(false);
       if (!isInitialized) setIsInitialized(true);
     }
-
-
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isInitialized) {
-        carregarImoveis(1, itemsPerPage);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isInitialized]);
-
-  useEffect(() => {
-    if (isInitialized) {
-      console.log('🔄 [FILTROS ADMIN] Filtro alterado, recarregando página 1:', filtroCriadoPor);
-      setCurrentPage(1);
-      carregarImoveis(1, itemsPerPage);
-    }
-  }, [filtroCriadoPor, isInitialized]);
-
-  const handleSelect = (id: number) => {
-    setSelecionados((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
-  };
+  // Carregar categorias, amenidades e tipos de propriedade
   async function carregarMetadata() {
     try {
       const result = await getCategoryAmenitie();
@@ -192,7 +175,29 @@ export default function CadastroImoveis() {
     carregarMetadata();
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isInitialized) {
+        carregarImoveis(1, itemsPerPage);
+      }
+    }, 100);
 
+    return () => clearTimeout(timer);
+  }, [isInitialized]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      console.log('🔄 [FILTROS ADMIN] Filtro alterado, recarregando página 1:', filtroCriadoPor);
+      setCurrentPage(1);
+      carregarImoveis(1, itemsPerPage);
+    }
+  }, [filtroCriadoPor, isInitialized]);
+
+  const handleSelect = (id: number) => {
+    setSelecionados((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
 
   const handleExcluirSelecionados = async () => {
     if (selecionados.length === 0) {
