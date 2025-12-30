@@ -1,0 +1,1 @@
+{"bundles":[{"asset":"3e4436d0c0d99b3e57d4ce198f89fa053bdf9a38f96aaa260981eb5aaf4a7fec.eszip","format":"eszip2"}],"routes":[{"function":"og-image","pattern":"^/empreendimento(?:/(.*))/?$","excluded_patterns":[],"path":"/empreendimento/*"}],"post_cache_routes":[],"bundler_version":"14.9.0","layers":[],"import_map":"netlify:import-map","function_config":{}}

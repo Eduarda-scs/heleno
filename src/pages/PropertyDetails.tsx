@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
 import { LeadModal } from "@/components/leadmodal";
+import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 
 
 type MediaType = "image" | "video";
@@ -164,51 +165,67 @@ const PropertyDetails = () => {
 
   const fetchProperty = async () => {
     try {
-      console.log(`[PropertyDetails] 🔄 Buscando imóvel ID: ${id}`);
+      console.log(`[PropertyDetails] 🔄 Iniciando busca prioritária do imóvel ID: ${id}`);
+
+      let tempProperty = null;
 
       const uniquePropertyDataStr = localStorage.getItem("uniquePropertyData");
-
       if (uniquePropertyDataStr) {
         try {
           const uniquePropertyData = JSON.parse(uniquePropertyDataStr);
-          console.log("[PropertyDetails] ✅ Dados encontrados do webhook/uniqueITEM:", uniquePropertyData);
-
           if (uniquePropertyData.id?.toString() === id) {
-            const convertedProperty = convertWebhookPropertyToComponentFormat(uniquePropertyData);
-            setProperty(convertedProperty);
-            localStorage.removeItem("uniquePropertyData");
-            return;
+            tempProperty = convertWebhookPropertyToComponentFormat(uniquePropertyData);
+            console.log("[PropertyDetails] 📦 Dados temporários do uniquePropertyData");
           }
         } catch (e) {
           console.error("[PropertyDetails] ❌ Erro ao parsear uniquePropertyData:", e);
         }
       }
 
-      const currentPropertyStr = localStorage.getItem("currentProperty");
-      if (currentPropertyStr) {
-        try {
-          const currentPropertyData = JSON.parse(currentPropertyStr);
-          console.log("[PropertyDetails] ✅ Dados encontrados do localStorage:", currentPropertyData);
-
-          if (currentPropertyData.id?.toString() === id) {
-            const convertedProperty = convertWebhookPropertyToComponentFormat(currentPropertyData);
-            setProperty(convertedProperty);
-            return;
+      if (!tempProperty) {
+        const currentPropertyStr = localStorage.getItem("currentProperty");
+        if (currentPropertyStr) {
+          try {
+            const currentPropertyData = JSON.parse(currentPropertyStr);
+            if (currentPropertyData.id?.toString() === id) {
+              tempProperty = convertWebhookPropertyToComponentFormat(currentPropertyData);
+              console.log("[PropertyDetails] 📦 Dados temporários do localStorage");
+            }
+          } catch (e) {
+            console.error("[PropertyDetails] ❌ Erro ao parsear currentProperty:", e);
           }
-        } catch (e) {
-          console.error("[PropertyDetails] ❌ Erro ao parsear currentProperty:", e);
         }
       }
 
-      if (currentProperty && currentProperty.id?.toString() === id) {
-        console.log(`[PropertyDetails] ✅ Encontrado no store: ${currentProperty.property_title}`);
-        const convertedProperty = convertWebhookPropertyToComponentFormat(currentProperty);
+      if (!tempProperty && currentProperty && currentProperty.id?.toString() === id) {
+        tempProperty = convertWebhookPropertyToComponentFormat(currentProperty);
+        console.log("[PropertyDetails] 📦 Dados temporários do store");
+      }
+
+      if (tempProperty) {
+        setProperty(tempProperty);
+      }
+
+      console.log(`[PropertyDetails] 🚀 PRIORIDADE: Buscando dados atualizados via webhook/uniqueITEM...`);
+
+      const webhookData = await getUniquePropertyFromWebhook({
+        property_id: id
+      });
+
+      if (webhookData) {
+        console.log(`[PropertyDetails] ✅ Dados recebidos do webhook/uniqueITEM:`, webhookData);
+        const convertedProperty = convertWebhookPropertyToComponentFormat(webhookData);
         setProperty(convertedProperty);
+        localStorage.removeItem("uniquePropertyData");
         return;
       }
 
-      console.log(`[PropertyDetails] ❌ Imóvel não encontrado`);
-      setProperty(null);
+      if (!tempProperty) {
+        console.log(`[PropertyDetails] ❌ Imóvel não encontrado em nenhuma fonte`);
+        setProperty(null);
+      } else {
+        console.log(`[PropertyDetails] ⚠️ Webhook não retornou dados, mantendo dados temporários`);
+      }
     } catch (error) {
       console.error("[PropertyDetails] ❌ Erro ao buscar imóvel:", error);
       setProperty(null);
@@ -220,15 +237,9 @@ const PropertyDetails = () => {
   useEffect(() => {
     if (!id) return;
 
-    const timer = setTimeout(() => {
-      if (!isInitialized) {
-        console.log("[PropertyDetails] 🚀 Iniciando carregamento após renderização...");
-        fetchProperty();
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [id, isInitialized]);
+    console.log("[PropertyDetails] 🎯 Componente montado, iniciando busca do imóvel...");
+    fetchProperty();
+  }, [id]);
 
   useEffect(() => {
     return () => {

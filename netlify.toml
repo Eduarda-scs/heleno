@@ -1,16 +1,11 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
 
-# 🔥 BOTs → Function (Open Graph dinâmico)
-[[redirects]]
-  from = "/empreendimento/:slug/:id"
-  to = "/.netlify/functions/og-property?slug=:slug&id=:id"
-  status = 200
-  conditions = { User-Agent = "WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot" }
+[[edge_functions]]
+  function = "og-image"
+  path = "/empreendimento/*"
 
-# 👤 Usuário normal → SPA
 [[redirects]]
   from = "/*"
   to = "/index.html"

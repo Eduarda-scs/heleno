@@ -14,32 +14,41 @@ export interface PaginatedPropertyResponse {
 export async function getPropertyFromWebhook(page: number = 1, limit: number = 5, filters?: any) {
   const url = "https://webhook.wiseuptech.com.br/webhook/apiADMINpagination";
 
+  const payload = {
+    event_name: "get_property",
+    tenant_id: "1911202511",
+    page: page,
+    limit: limit,
+    filters: filters || null
+  };
+
+  console.log('📦 [PAYLOAD ADMIN] Enviando para backend:', payload);
+
   try {
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        event_name: "get_property",
-        tenant_id: "1911202511",
-        page: page,
-        limit: limit,
-        filters: filters || null
-      }),
+      body: JSON.stringify(payload),
     });
 
     const rawData = await response.json().catch(() => null);
-    console.log("[PropertyService] 🔄 Retorno da página", page, ":", rawData);
+    console.log("[PropertyService] 🔄 Retorno da página", page, "com filtros:", filters, "dados:", rawData);
 
     if (Array.isArray(rawData) && rawData.length > 0) {
       const firstItem = rawData[0];
 
       const properties = firstItem.listProperty || [];
       const totalItems = firstItem.propertyAmount || properties.length;
-      const categories = firstItem.categories || [];
-      const amenities = firstItem.amenities || [];
+      const categories = firstItem.propertyCategory || [];
+      const amenities = firstItem.propertyAmenitie || [];
       const propertyTypes = firstItem.propertyType || [];
+
+      console.log('🔍 [PropertyService] Dados extraídos:');
+      console.log('   📊 Categories:', categories.length, 'itens');
+      console.log('   🏠 Amenities:', amenities.length, 'itens');
+      console.log('   🏢 PropertyTypes:', propertyTypes.length, 'itens');
 
       const totalPages = Math.ceil(totalItems / limit);
 
