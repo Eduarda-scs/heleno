@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 
-const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
+const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 // Lazy Components (carregam apenas quando precisam)
 const Footer = lazy(() => import("@/components/Footer"));
@@ -16,7 +16,6 @@ import Heart from "lucide-react/dist/esm/icons/heart";
 import ShieldCheck from "lucide-react/dist/esm/icons/shield-check";
 import Star from "lucide-react/dist/esm/icons/star";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
-import LeadModal from "@/components/leadscap";
 
 
 // Serviço
@@ -236,9 +235,8 @@ const Index: React.FC = () => {
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
         <Footer />
       </Suspense>
-      <LeadModal />
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <WhatsAppButton />
+        <FloatingContactWidget />
       </Suspense>
     </div>
   );

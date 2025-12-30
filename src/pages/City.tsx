@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense, lazy } from "react";
 // LAZY LOAD PARA REDUZIR A CADEIA CRÍTICA
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
+const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 // IMPORTAÇÃO SUPER LEVE DOS ÍCONES DO LUCIDE (SEM TRAZER A LIB INTEIRA)
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
@@ -16,7 +16,6 @@ import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Users from "lucide-react/dist/esm/icons/users";
 import Waves from "lucide-react/dist/esm/icons/waves";
-import LeadModal from "@/components/leadscap";
 
 
 // Imagens
@@ -253,9 +252,8 @@ export default function City() {
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Footer />
       </Suspense>
-      <LeadModal />
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <WhatsAppButton />
+        <FloatingContactWidget />
       </Suspense>
     </div>
   );

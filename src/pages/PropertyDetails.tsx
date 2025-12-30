@@ -19,9 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
 import { LeadModal } from "@/components/leadmodal";
-import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 
-import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 
 import {
   getPropertyFromWebhook,
@@ -42,6 +40,7 @@ type MediaItem = {
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 const PropertyDetails = () => {
   const { id, slug } = useParams();
@@ -795,6 +794,9 @@ const PropertyDetails = () => {
 
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <FloatingContactWidget />
       </Suspense>
 
       <style>

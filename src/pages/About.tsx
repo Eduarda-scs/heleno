@@ -8,10 +8,9 @@ import {
   Users,
 } from "lucide-react";
 import { lazy, Suspense, useRef, useEffect, useState } from "react";
-import LeadModal from "@/components/leadscap";
 
 
-const WhatsAppButton = lazy(() => import("@/components/whatsapp"));
+const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 
@@ -570,9 +569,9 @@ const nextItem = () => {
       <Suspense fallback={<div>Carregando...</div>}>
         <Footer />
       </Suspense>
-      <LeadModal />
+      
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <WhatsAppButton />
+        <FloatingContactWidget />
       </Suspense>
     </div>
   );

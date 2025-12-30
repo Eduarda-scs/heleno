@@ -5,13 +5,33 @@ import { sendLeadToWebhook } from "@/components/c2sapi";
 function LeadModal() {
   const [openModal, setOpenModal] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [sent, setSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Abre assim que carrega
+  // Abre o modal assim que carrega
   useEffect(() => {
     setOpenModal(true);
   }, []);
+
+  // Exibe mensagem estilo WhatsApp a cada 30s
+  useEffect(() => {
+    if (sent) return;
+
+    const interval = setInterval(() => {
+      if (!openModal) {
+        setShowBubble(true);
+        setShowHint(true);
+
+        // some automaticamente
+        setTimeout(() => {
+          setShowHint(false);
+        }, 5000);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [openModal, sent]);
 
   return (
     <>
@@ -47,7 +67,7 @@ function LeadModal() {
 
                     const email = (formData.get("email") as string).trim();
 
-                    // valida gmail
+                    // valida Gmail
                     if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
                       setEmailError(
                         "Digite um e-mail válido do Gmail (ex: nome@gmail.com)"
@@ -143,34 +163,39 @@ function LeadModal() {
         </div>
       )}
 
-      {/* BOTÃO FLUTUANTE */}
+      {/* BOLHA + MENSAGEM */}
       {showBubble && (
-        <button
-          onClick={() => {
-            setOpenModal(true);
-            setShowBubble(false);
-          }}
-          className="
-            fixed
-            bottom-[96px]
-            right-6
-            z-[9999]
-            w-14
-            h-14
-            rounded-full
-            bg-primary
-            shadow-xl
-            flex
-            items-center
-            justify-center
-            animate-float
-            hover:scale-105
-            transition
-          "
-          aria-label="Abrir formulário"
-        >
-          <MessageCircle className="w-6 h-6 text-white" />
-        </button>
+        <div className="fixed bottom-[160px] right-6 z-[9999] flex flex-col items-end gap-2">
+          {showHint && (
+            <div className="bg-white text-sm text-neutral-800 px-4 py-2 rounded-2xl shadow-lg animate-fadeIn">
+              Deixe seu contato 💬
+            </div>
+          )}
+
+          <button
+            onClick={() => {
+              setOpenModal(true);
+              setShowBubble(false);
+              setShowHint(false);
+            }}
+            className="
+              w-14
+              h-14
+              rounded-full
+              bg-primary
+              shadow-xl
+              flex
+              items-center
+              justify-center
+              animate-float
+              hover:scale-105
+              transition
+            "
+            aria-label="Abrir formulário"
+          >
+            <MessageCircle className="w-6 h-6 text-white" />
+          </button>
+        </div>
       )}
     </>
   );
