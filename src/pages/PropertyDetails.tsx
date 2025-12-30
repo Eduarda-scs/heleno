@@ -21,6 +21,16 @@ import { useNavigate } from "react-router-dom";
 import { LeadModal } from "@/components/leadmodal";
 import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 
+import { getUniquePropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
+
+import {
+  getPropertyFromWebhook,
+  getUniquePropertyFromWebhook,
+} from "@/hooks/Admin/ClientProperty";
+
+
+
+
 
 type MediaType = "image" | "video";
 type MediaTab = "fotos" | "videos";
@@ -226,26 +236,66 @@ const PropertyDetails = () => {
       } else {
         console.log(`[PropertyDetails] ⚠️ Webhook não retornou dados, mantendo dados temporários`);
       }
+
+      setIsInitialized(false);
+
+      let foundProperty = null;
+      let page = 1;
+
+      while (!foundProperty) {
+        const response = await getPropertyFromWebhook(page, 10);
+
+        if (!response.properties.length) break;
+
+        foundProperty = response.properties.find(
+          (p: any) => Number(p.id) === Number(id)
+        );
+
+        if (foundProperty) break;
+
+        page++;
+      }
+
+      if (!foundProperty) {
+        setProperty(null);
+        return;
+      }
+
+      const fullProperty = await getUniquePropertyFromWebhook(foundProperty);
+      setProperty(convertWebhookPropertyToComponentFormat(fullProperty));
+
+
     } catch (error) {
-      console.error("[PropertyDetails] ❌ Erro ao buscar imóvel:", error);
+      console.error(error);
       setProperty(null);
     } finally {
       setIsInitialized(true);
     }
   };
 
+
+
+
+  
   useEffect(() => {
     if (!id) return;
+    fetchProperty();
+  }, [id]);
+
 
     console.log("[PropertyDetails] 🎯 Componente montado, iniciando busca do imóvel...");
     fetchProperty();
   }, [id]);
 
+    
   useEffect(() => {
     return () => {
       clearCurrentProperty();
     };
   }, [clearCurrentProperty]);
+
+
+
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);

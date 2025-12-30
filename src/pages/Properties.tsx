@@ -438,6 +438,7 @@ const Properties = () => {
         </div>
       </section>
 
+<<<<<<< HEAD
       <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border">
@@ -482,11 +483,63 @@ const Properties = () => {
                 placeholder="Quartos"
                 isOpen={openFilter === 'quartos'}
                 onToggle={() => handleFilterToggle('quartos')}
+=======
+
+
+      <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-50">
+
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border">
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={cidadeOptions}
+                selectedValue={filters.cidade}
+                onValueChange={(value) => handleFilterChange('cidade', value)}
+                placeholder="Cidade"
+                isOpen={openFilter === 'cidade'}
+                onToggle={() => handleFilterToggle('cidade')}
               />
             </div>
 
             <div className="flex-1 min-w-[200px]">
               <Filter
+                options={tipoOptions}
+                selectedValue={filters.tipo}
+                onValueChange={(value) => handleFilterChange('tipo', value)}
+                placeholder="Tipo de imóvel"
+                isOpen={openFilter === 'tipo'}
+                onToggle={() => handleFilterToggle('tipo')}
+>>>>>>> 51fc708372bb0999b324953e0201fe6f5f8ab1a3
+              />
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+<<<<<<< HEAD
+=======
+                options={valorOptions}
+                selectedValue={filters.valor}
+                onValueChange={(value) => handleFilterChange('valor', value)}
+                placeholder="Qualquer Valor"
+                isOpen={openFilter === 'valor'}
+                onToggle={() => handleFilterToggle('valor')}
+              />
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+                options={quartosOptions}
+                selectedValue={filters.quartos}
+                onValueChange={(value) => handleFilterChange('quartos', value)}
+                placeholder="Quartos"
+                isOpen={openFilter === 'quartos'}
+                onToggle={() => handleFilterToggle('quartos')}
+              />
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <Filter
+>>>>>>> 51fc708372bb0999b324953e0201fe6f5f8ab1a3
                 options={vagasOptions}
                 selectedValue={filters.vagas}
                 onValueChange={(value) => handleFilterChange('vagas', value)}
