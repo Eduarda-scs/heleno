@@ -235,7 +235,7 @@ const PropertyDetails = () => {
       } else {
         console.log(`[PropertyDetails] ⚠️ Webhook não retornou dados, mantendo dados temporários`);
       }
-=======
+
       setIsInitialized(false);
 
       let foundProperty = null;
