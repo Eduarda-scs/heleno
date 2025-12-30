@@ -509,14 +509,14 @@ const Properties = () => {
                 placeholder="Tipo de imóvel"
                 isOpen={openFilter === 'tipo'}
                 onToggle={() => handleFilterToggle('tipo')}
->>>>>>> 51fc708372bb0999b324953e0201fe6f5f8ab1a3
+
               />
             </div>
 
             <div className="flex-1 min-w-[200px]">
               <Filter
-<<<<<<< HEAD
-=======
+
+
                 options={valorOptions}
                 selectedValue={filters.valor}
                 onValueChange={(value) => handleFilterChange('valor', value)}
@@ -539,7 +539,7 @@ const Properties = () => {
 
             <div className="flex-1 min-w-[200px]">
               <Filter
->>>>>>> 51fc708372bb0999b324953e0201fe6f5f8ab1a3
+
                 options={vagasOptions}
                 selectedValue={filters.vagas}
                 onValueChange={(value) => handleFilterChange('vagas', value)}
