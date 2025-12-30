@@ -439,7 +439,6 @@ const Properties = () => {
       </section>
 
 
-      <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-40">
 
       <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-50">
 
