@@ -280,7 +280,7 @@ const PropertyDetails = () => {
     fetchProperty();
   }, [id]);
 
-<<<<<<< HEAD
+
     console.log("[PropertyDetails] 🎯 Componente montado, iniciando busca do imóvel...");
     fetchProperty();
   }, [id]);
@@ -290,9 +290,9 @@ const PropertyDetails = () => {
       clearCurrentProperty();
     };
   }, [clearCurrentProperty]);
-=======
 
->>>>>>> 9b03a4465d49112889dcfca322f9b5867fd1c9cf
+
+
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
