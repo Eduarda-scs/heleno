@@ -16,6 +16,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { getPropertyFromWebhook, getUniquePropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 import { removeProperty } from "@/hooks/Admin/RemoveProperty";
 import { useToast } from "@/components/ui/use-toast";
+import { useCategoryAmenitie } from "@/hooks/Admin/CategoryAmenitie";
+
 
 const Header = lazy(() => import("@/components/Header"));
 
@@ -96,6 +98,7 @@ export default function CadastroImoveis() {
   const [totalItems, setTotalItems] = useState(0);
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { getCategoryAmenitie } = useCategoryAmenitie();
 
   async function carregarImoveis(page: number = 1, limit: number = 5) {
     setIsLoadingProperties(true);
@@ -106,49 +109,22 @@ export default function CadastroImoveis() {
         backendFilters.created_by = filtroCriadoPor;
       }
 
-      console.log('🔍 [FILTROS ADMIN] Estado atual do filtro:', filtroCriadoPor);
-      console.log('📤 [FILTROS ADMIN] Filtros sendo enviados para backend:', backendFilters);
+      
 
       const filtersToSend = Object.keys(backendFilters).length > 0 ? backendFilters : null;
 
-      console.log(`📡 [PAGINAÇÃO ADMIN] Buscando página ${page} com filtros:`, filtersToSend);
+    
 
       const retorno = await getPropertyFromWebhook(page, limit, filtersToSend);
-      console.log("[Cadastroimoveis] 📌 Retorno:", retorno);
+     
 
       if (retorno) {
-        if (retorno.properties) {
-          setImoveis(retorno.properties);
-        } else {
-          setImoveis([]);
-        }
-
-        if (retorno.amenities) {
-          setAmenities(retorno.amenities);
-        } else {
-          setAmenities([]);
-        }
-
-        if (retorno.categories) {
-          setCategories(retorno.categories);
-        } else {
-          setCategories([]);
-        }
-
-        if (retorno.property_types) {
-          setPropertyTypes(retorno.property_types);
-        } else {
-          setPropertyTypes([]);
-        }
 
         setTotalPages(retorno.total_pages || 1);
         setTotalItems(retorno.total_items || 0);
         setCurrentPage(retorno.page || page);
       } else {
         setImoveis([]);
-        setAmenities([]);
-        setCategories([]);
-        setPropertyTypes([]);
         setTotalPages(1);
         setTotalItems(0);
       }
@@ -164,6 +140,8 @@ export default function CadastroImoveis() {
       setIsLoadingProperties(false);
       if (!isInitialized) setIsInitialized(true);
     }
+
+
   }
 
   useEffect(() => {
@@ -189,6 +167,32 @@ export default function CadastroImoveis() {
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
+  async function carregarMetadata() {
+    try {
+      const result = await getCategoryAmenitie();
+
+      if (result && result.length > 0) {
+        setCategories(JSON.parse(result[0].propertyCategory || "[]"));
+        setAmenities(JSON.parse(result[0].propertyAmenitie || "[]"));
+
+        const propertyTypesData = Array.isArray(result[0].propertyType)
+          ? result[0].propertyType
+          : JSON.parse(result[0].propertyType || "[]");
+
+        setPropertyTypes(propertyTypesData);
+      }
+    } catch (error) {
+      console.error("❌ Erro ao carregar metadata:", error);
+      setCategories([]);
+      setAmenities([]);
+      setPropertyTypes([]);
+    }
+  }
+  useEffect(() => {
+    carregarMetadata();
+  }, []);
+
+
 
   const handleExcluirSelecionados = async () => {
     if (selecionados.length === 0) {

@@ -21,6 +21,8 @@ export async function getPropertyFromWebhook(page: number = 1, limit: number = 5
     limit: limit,
     filters: filters || null
   };
+  console.log("🧠 RAW firstItem:", firstItem);
+
 
   console.log('📦 [PAYLOAD ADMIN] Enviando para backend:', payload);
 
