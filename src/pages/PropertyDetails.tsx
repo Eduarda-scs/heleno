@@ -283,9 +283,6 @@ const PropertyDetails = () => {
   }, [id]);
 
 
-    console.log("[PropertyDetails] 🎯 Componente montado, iniciando busca do imóvel...");
-    fetchProperty();
-  }, [id]);
 
     
   useEffect(() => {
