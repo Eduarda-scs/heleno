@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CookieConsent from "@/components/CookieConsent";
-
+import { ScrollToTop } from "@/components/scrolltotop";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth, AuthProvider } from "@/contexts/AuthContext";
@@ -122,10 +122,11 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-            <CookieConsent />
-          </AuthProvider>
+          <ScrollToTop />
+            <AuthProvider>
+              <AppRoutes />
+              <CookieConsent />
+            </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

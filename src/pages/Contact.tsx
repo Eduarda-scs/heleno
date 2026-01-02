@@ -46,12 +46,12 @@ const contactInfo = [
     icon: MapPin,
     title: "Endereço",
     info: "Balneário Camboriú, SC",
-    link: "#",
+    link: "https://www.google.com.br/maps/place/26%C2%B059'33.4%22S+48%C2%B038'06.7%22W/@-27.0078951,-48.6425063,14z/data=!4m4!3m3!8m2!3d-26.9926!4d-48.6352?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D",
   },
   {
     icon: Clock,
     title: "Horário",
-    info: "Segunda a Sexta, 9h - 18h",
+    info: "Segunda a sexta - 09hrs às 20hrs\nDomingo - 08hrs às 12hrs\nSábado - 09hrs às 16hrs",
     link: "#",
   },
 ];
@@ -143,13 +143,18 @@ const Contact = () => {
                         <a
                           key={i}
                           href={item.links?.[i]}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="hover:underline"
                         >
                           {text}
                         </a>
                       ))
                     ) : (
-                      <a href={item.link} className="hover:underline">
+                      <a href={item.link} 
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="hover:underline whitespace-pre-line">
                         {item.info}
                       </a>
                     )}

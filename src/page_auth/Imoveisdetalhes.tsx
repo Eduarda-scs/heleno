@@ -101,7 +101,7 @@ export default function Imoveisdetalhes() {
   const [allPropertyTypes, setAllPropertyTypes] = useState<PropertyType[]>([]);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<number[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
-  const [selectedPropertyTypeIds, setSelectedPropertyTypeIds] = useState<number[]>([]);
+  const [selectedPropertyTypeId, setSelectedPropertyTypeId] = useState<number | null>(null);
 
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
   const [draggedVideoIndex, setDraggedVideoIndex] = useState<number | null>(null);
@@ -131,8 +131,7 @@ export default function Imoveisdetalhes() {
 
       setSelectedAmenityIds(propriedade.amenities?.map((a: Amenity) => a.id) || []);
       setSelectedCategoryIds(propriedade.categories?.map((c: Category) => c.id) || []);
-      setSelectedPropertyTypeIds(propriedade.property_types?.map((pt: PropertyType) => pt.id) || []);
-
+      setSelectedPropertyTypeId(propriedade.property_types?.[0]?.id || null);
       const coverImage = propriedade.images?.find(
         (img: Image) => img.is_cover === "true"
       );
@@ -195,15 +194,26 @@ export default function Imoveisdetalhes() {
 
   const handleCancelEdit = () => {
     setImovel(JSON.parse(JSON.stringify(originalImovel)));
-    setSelectedAmenityIds(originalImovel?.amenities?.map((a: Amenity) => a.id) || []);
-    setSelectedCategoryIds(originalImovel?.categories?.map((c: Category) => c.id) || []);
-    setSelectedPropertyTypeIds(originalImovel?.property_types?.map((pt: PropertyType) => pt.id) || []);
+
+    setSelectedAmenityIds(
+      originalImovel?.amenities?.map((a: Amenity) => a.id) || []
+    );
+
+    setSelectedCategoryIds(
+      originalImovel?.categories?.map((c: Category) => c.id) || []
+    );
+
+    setSelectedPropertyTypeId(
+      originalImovel?.property_types?.[0]?.id || null
+    );
+
     setNewPhotos([]);
     setNewVideos([]);
     setNewPhotoPreviews([]);
     setNewVideoPreviews([]);
     setIsEditing(false);
   };
+
 
   const handleInputChange = (field: keyof Property, value: string) => {
     setImovel(prev => prev ? { ...prev, [field]: value } : null);
@@ -221,11 +231,10 @@ export default function Imoveisdetalhes() {
     );
   };
 
-  const togglePropertyType = (id: number) => {
-    setSelectedPropertyTypeIds((prev) =>
-      prev.includes(id) ? prev.filter((pt) => pt !== id) : [...prev, id]
-    );
+  const handleSelectPropertyType = (id: number) => {
+    setSelectedPropertyTypeId(id); // 👈 sempre substitui
   };
+
 
   const handleImageDragStart = (index: number) => {
     setDraggedImageIndex(index);
@@ -411,16 +420,20 @@ export default function Imoveisdetalhes() {
     setIsSaving(true);
 
     try {
-      const selectedAmenities = allAmenities.filter((a) =>
+      // 🔑 Fonte da verdade: IDs selecionados
+      const selectedAmenities = allAmenities.filter(a =>
         selectedAmenityIds.includes(a.id)
       );
-      const selectedCategories = allCategories.filter((c) =>
+
+      const selectedCategories = allCategories.filter(c =>
         selectedCategoryIds.includes(c.id)
       );
-      const selectedPropertyTypes = allPropertyTypes.filter((pt) =>
-        selectedPropertyTypeIds.includes(pt.id)
-      );
 
+      const selectedPropertyTypes = selectedPropertyTypeId
+        ? allPropertyTypes.filter(pt => pt.id === selectedPropertyTypeId)
+        : [];
+
+      // 🧠 Imóvel atualizado reflete exatamente o estado atual da UI
       const updatedImovel = {
         ...imovel,
         amenities: selectedAmenities,
@@ -428,29 +441,31 @@ export default function Imoveisdetalhes() {
         property_types: selectedPropertyTypes,
       };
 
+      // 📸 Ordem das imagens
       const imagePositions = imovel.images.map((img, idx) => ({
         url: img.url,
-        position: String(idx + 1)
+        position: String(idx + 1),
       }));
 
+      // 🎥 Ordem dos vídeos
       const videoPositions = imovel.videos.map((video, idx) => ({
         url: video.url,
-        position: String(idx + 1)
+        position: String(idx + 1),
       }));
 
       const hasNewMedia = newPhotos.length > 0 || newVideos.length > 0;
 
-      console.log('[Imoveisdetalhes] 📤 Enviando para webhook:', {
+      console.log('[ImoveisDetalhes] 📤 Enviando update:', {
         event_name: 'update_property',
         property_id: imovel.id,
         previous_data: originalImovel,
         updated_data: updatedImovel,
         image_positions: imagePositions,
         video_positions: videoPositions,
-        new_media_count: newPhotos.length + newVideos.length,
         has_new_media: hasNewMedia,
       });
 
+      // 🔄 Atualiza dados do imóvel (SEM mídia)
       await updateProperty({
         event_name: 'update_property',
         property_id: imovel.id,
@@ -458,6 +473,7 @@ export default function Imoveisdetalhes() {
         updated_data: updatedImovel,
       });
 
+      // 📤 Envia novas mídias, se houver
       if (hasNewMedia) {
         const allNewMedia = [...newPhotos, ...newVideos];
 
@@ -487,21 +503,26 @@ export default function Imoveisdetalhes() {
           endereco: `${imovel.property_street}, ${imovel.property_street_number}`,
           finalidade: imovel.property_negociation_price || "",
           event_name: 'update_property_media',
-          caracteristicas: selectedCategories.map(c => c.category_name).join(', '),
+          caracteristicas: selectedCategories
+            .map(c => c.category_name)
+            .join(", "),
           nome: imovel.client_name,
           foto: allNewMedia,
         };
 
-        
         await sendPropertyToWebhook(payload);
       }
 
+      // 🔄 Atualiza estados locais
       setImovel(updatedImovel);
       setOriginalImovel(JSON.parse(JSON.stringify(updatedImovel)));
+
+      // 🧹 Limpa estados temporários
       setNewPhotos([]);
       setNewVideos([]);
       setNewPhotoPreviews([]);
       setNewVideoPreviews([]);
+
       setIsEditing(false);
 
       toast({
@@ -509,7 +530,7 @@ export default function Imoveisdetalhes() {
         description: "As alterações foram salvas com sucesso.",
       });
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      console.error("Erro ao salvar:", error);
       toast({
         title: "Erro ao salvar",
         description: "Ocorreu um erro ao salvar as alterações. Tente novamente.",
@@ -519,6 +540,7 @@ export default function Imoveisdetalhes() {
       setIsSaving(false);
     }
   };
+
 
   const isClient = isCreatedByClient();
   const hasMediaContent = (imovel.images && imovel.images.length > 0) || (imovel.videos && imovel.videos.length > 0);
@@ -1086,9 +1108,9 @@ export default function Imoveisdetalhes() {
                                 <button
                                   key={pt.id}
                                   type="button"
-                                  onClick={() => togglePropertyType(pt.id)}
+                                  onClick={() => handleSelectPropertyType(pt.id)}
                                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                                    selectedPropertyTypeIds.includes(pt.id)
+                                    selectedPropertyTypeId === pt.id
                                       ? "bg-purple-600 text-white"
                                       : "bg-muted text-foreground hover:bg-muted/80"
                                   }`}
@@ -1098,6 +1120,7 @@ export default function Imoveisdetalhes() {
                                   )}
                                   {pt.property_type_name}
                                 </button>
+
                               ))
                             ) : (
                               <p className="text-sm text-muted-foreground">Nenhum tipo disponível</p>
