@@ -1,9 +1,11 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 import { generateSlug } from "@/utils/slug";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { getSearchByName } from "@/hooks/Admin/getSearchByName";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -87,6 +89,7 @@ const Filter = ({ options, selectedValue, onValueChange, placeholder, isOpen, on
 };
 
 const Properties = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -102,6 +105,8 @@ const Properties = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [loadingPage, setLoadingPage] = useState<number | null>(null);
 
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
   const [filters, setFilters] = useState({
     cidade: "",
     tipo: "",
@@ -111,6 +116,100 @@ const Properties = () => {
   });
 
   const [openFilter, setOpenFilter] = useState<string | null>(null);
+
+  const [searchName, setSearchName] = useState("");
+  const [isSearchingByName, setIsSearchingByName] = useState(false);
+
+  const [searchSuggestions, setSearchSuggestions] = useState<PropertyType[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchName.trim().length >= 3) {
+      setIsLoadingSuggestions(true);
+
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const results = await getSearchByName(searchName);
+          const limitedResults = results.slice(0, 5);
+          setSearchSuggestions(limitedResults);
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error("❌ Erro ao buscar sugestões:", error);
+          setSearchSuggestions([]);
+        } finally {
+          setIsLoadingSuggestions(false);
+        }
+      }, 300);
+    } else {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      setIsLoadingSuggestions(false);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchName]);
+
+  const handleSuggestionClick = (property: PropertyType) => {
+    const slug = generateSlug(property.property_title);
+    setShowSuggestions(false);
+    setSearchName("");
+    navigate(`/empreendimento/${slug}/${property.id}`);
+  };
+
+  const handleSearchByName = async () => {
+    if (!searchName.trim()) return;
+
+    try {
+      setIsLoading(true);
+      setIsSearchingByName(true);
+      setShowSuggestions(false);
+
+      const result = await getSearchByName(searchName);
+
+      setProperties(result);
+      setTotalPages(1);
+      setTotalItems(result.length);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("❌ Erro na busca por nome:", error);
+      setProperties([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearSearchByName = () => {
+    setSearchName("");
+    setIsSearchingByName(false);
+    setSearchSuggestions([]);
+    setShowSuggestions(false);
+    setCurrentPage(1);
+    loadProperties(1);
+  };
 
   const loadProperties = async (page = 1) => {
     try {
@@ -228,7 +327,8 @@ const Properties = () => {
     filters.valor,
     filters.quartos,
     filters.vagas,
-    isInitialized
+    isInitialized,
+    isSearchingByName
   ]);
 
   const parsedProperties = properties.map((property) => {
@@ -437,70 +537,267 @@ const Properties = () => {
         </div>
       </section>
 
-
       <section className="w-full bg-background/70 backdrop-blur-md border-b border-border py-8 relative z-40">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border">
 
-            <div className="flex-1 min-w-[200px]">
-              <Filter
-                options={cidadeOptions}
-                selectedValue={filters.cidade}
-                onValueChange={(value) => handleFilterChange('cidade', value)}
-                placeholder="Cidade"
-                isOpen={openFilter === 'cidade'}
-                onToggle={() => handleFilterToggle('cidade')}
-              />
+          <div className="hidden md:flex flex-col gap-6">
+
+            <div className="flex gap-4 p-4 bg-card rounded-xl border border-border">
+              <div className="flex-1 min-w-[180px]">
+                <Filter
+                  options={cidadeOptions}
+                  selectedValue={filters.cidade}
+                  onValueChange={(value) => handleFilterChange("cidade", value)}
+                  placeholder="Cidade"
+                  isOpen={openFilter === "cidade"}
+                  onToggle={() => handleFilterToggle("cidade")}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[180px]">
+                <Filter
+                  options={tipoOptions}
+                  selectedValue={filters.tipo}
+                  onValueChange={(value) => handleFilterChange("tipo", value)}
+                  placeholder="Tipo"
+                  isOpen={openFilter === "tipo"}
+                  onToggle={() => handleFilterToggle("tipo")}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[180px]">
+                <Filter
+                  options={valorOptions}
+                  selectedValue={filters.valor}
+                  onValueChange={(value) => handleFilterChange("valor", value)}
+                  placeholder="Valor"
+                  isOpen={openFilter === "valor"}
+                  onToggle={() => handleFilterToggle("valor")}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[160px]">
+                <Filter
+                  options={quartosOptions}
+                  selectedValue={filters.quartos}
+                  onValueChange={(value) => handleFilterChange("quartos", value)}
+                  placeholder="Quartos"
+                  isOpen={openFilter === "quartos"}
+                  onToggle={() => handleFilterToggle("quartos")}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[160px]">
+                <Filter
+                  options={vagasOptions}
+                  selectedValue={filters.vagas}
+                  onValueChange={(value) => handleFilterChange("vagas", value)}
+                  placeholder="Vagas"
+                  isOpen={openFilter === "vagas"}
+                  onToggle={() => handleFilterToggle("vagas")}
+                />
+              </div>
             </div>
 
-            <div className="flex-1 min-w-[200px]">
-              <Filter
-                options={tipoOptions}
-                selectedValue={filters.tipo}
-                onValueChange={(value) => handleFilterChange('tipo', value)}
-                placeholder="Tipo de imóvel"
-                isOpen={openFilter === 'tipo'}
-                onToggle={() => handleFilterToggle('tipo')}
-              />
-            </div>
+            <div className="flex justify-center">
+              <div className="w-full max-w-xl relative" ref={searchContainerRef}>
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={searchName}
+                      onChange={(e) => setSearchName(e.target.value)}
+                      placeholder="Buscar pelo nome do imóvel"
+                      className="w-full px-4 py-3 border border-border rounded-lg bg-background"
+                    />
 
-            <div className="flex-1 min-w-[200px]">
-              <Filter
-                options={valorOptions}
-                selectedValue={filters.valor}
-                onValueChange={(value) => handleFilterChange('valor', value)}
-                placeholder="Qualquer Valor"
-                isOpen={openFilter === 'valor'}
-                onToggle={() => handleFilterToggle('valor')}
-              />
-            </div>
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+                        {searchSuggestions.map((property) => {
+                          const coverImage = property.images?.find(img => img.is_cover)?.url || property.images?.[0]?.url || "";
 
-            <div className="flex-1 min-w-[200px]">
-              <Filter
-                options={quartosOptions}
-                selectedValue={filters.quartos}
-                onValueChange={(value) => handleFilterChange('quartos', value)}
-                placeholder="Quartos"
-                isOpen={openFilter === 'quartos'}
-                onToggle={() => handleFilterToggle('quartos')}
-              />
-            </div>
+                          return (
+                            <button
+                              key={property.id}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSuggestionClick(property);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-[#cca77b] transition-colors duration-150 flex items-center gap-3 border-b border-border last:border-b-0"
+                            >
+                              {coverImage && (
+                                <img
+                                  src={coverImage}
+                                  alt={property.property_title}
+                                  className="w-16 h-16 object-cover rounded"
+                                  onError={(e) => {
+                                    const target = e.currentTarget as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-foreground truncate">
+                                  {property.property_title}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {property.property_city}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
 
-            <div className="flex-1 min-w-[200px]">
-              <Filter
-                options={vagasOptions}
-                selectedValue={filters.vagas}
-                onValueChange={(value) => handleFilterChange('vagas', value)}
-                placeholder="Vagas"
-                isOpen={openFilter === 'vagas'}
-                onToggle={() => handleFilterToggle('vagas')}
-              />
-            </div>
+                    {isLoadingSuggestions && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary"></div>
+                      </div>
+                    )}
+                  </div>
 
+                  <Button onClick={handleSearchByName}>
+                    Buscar
+                  </Button>
+
+                  {isSearchingByName && (
+                    <Button variant="outline" onClick={clearSearchByName}>
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
+
+          <div className="md:hidden flex flex-col gap-4 p-4 bg-card rounded-xl border border-border">
+
+            <div className="relative" ref={searchContainerRef}>
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    placeholder="Buscar imóvel"
+                    className="w-full px-4 py-3 border border-border rounded-lg bg-background"
+                  />
+
+                  {showSuggestions && searchSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+                      {searchSuggestions.map((property) => {
+                        const coverImage = property.images?.find(img => img.is_cover)?.url || property.images?.[0]?.url || "";
+
+                        return (
+                          <button
+                            key={property.id}
+                            onClick={() => handleSuggestionClick(property)}
+                            className="w-full text-left px-4 py-3 hover:bg-[#cca77b] transition-colors duration-150 flex items-center gap-3 border-b border-border last:border-b-0"
+                          >
+                            {coverImage && (
+                              <img
+                                src={coverImage}
+                                alt={property.property_title}
+                                className="w-16 h-16 object-cover rounded"
+                                onError={(e) => {
+                                  const target = e.currentTarget as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-foreground truncate">
+                                {property.property_title}
+                              </p>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {property.property_city}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {isLoadingSuggestions && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary"></div>
+                    </div>
+                  )}
+                </div>
+
+                <Button onClick={handleSearchByName}>
+                  Buscar
+                </Button>
+              </div>
+            </div>
+
+            {isSearchingByName && (
+              <Button variant="outline" onClick={clearSearchByName}>
+                Limpar busca
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+            >
+              {showMobileFilters ? "Ocultar filtros" : "Mais filtros"}
+            </Button>
+
+            {showMobileFilters && (
+              <div className="flex flex-col gap-3 pt-2">
+                <Filter
+                  options={cidadeOptions}
+                  selectedValue={filters.cidade}
+                  onValueChange={(value) => handleFilterChange("cidade", value)}
+                  placeholder="Cidade"
+                  isOpen={openFilter === "cidade"}
+                  onToggle={() => handleFilterToggle("cidade")}
+                />
+
+                <Filter
+                  options={tipoOptions}
+                  selectedValue={filters.tipo}
+                  onValueChange={(value) => handleFilterChange("tipo", value)}
+                  placeholder="Tipo"
+                  isOpen={openFilter === "tipo"}
+                  onToggle={() => handleFilterToggle("tipo")}
+                />
+
+                <Filter
+                  options={valorOptions}
+                  selectedValue={filters.valor}
+                  onValueChange={(value) => handleFilterChange("valor", value)}
+                  placeholder="Valor"
+                  isOpen={openFilter === "valor"}
+                  onToggle={() => handleFilterToggle("valor")}
+                />
+
+                <Filter
+                  options={quartosOptions}
+                  selectedValue={filters.quartos}
+                  onValueChange={(value) => handleFilterChange("quartos", value)}
+                  placeholder="Quartos"
+                  isOpen={openFilter === "quartos"}
+                  onToggle={() => handleFilterToggle("quartos")}
+                />
+
+                <Filter
+                  options={vagasOptions}
+                  selectedValue={filters.vagas}
+                  onValueChange={(value) => handleFilterChange("vagas", value)}
+                  placeholder="Vagas"
+                  isOpen={openFilter === "vagas"}
+                  onToggle={() => handleFilterToggle("vagas")}
+                />
+              </div>
+            )}
+          </div>
+
         </div>
       </section>
-
 
       <section className="py-16 bg-background hidden md:block">
         <div className="container mx-auto px-4 lg:px-8">
@@ -657,18 +954,6 @@ const Properties = () => {
             </div>
           ) : (
             <>
-              <div className="mb-6 text-center">
-                <div className="bg-luxury-bg px-4 py-2 rounded-lg inline-block">
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-bwmodelica text-foreground">{properties.length}</span> de{" "}
-                    <span className="font-bwmodelica text-foreground">{totalItems}</span> imóveis
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Página <span className="font-bwmodelica">{currentPage}</span> de{" "}
-                    <span className="font-bwmodelica">{totalPages}</span>
-                  </p>
-                </div>
-              </div>
 
               <Swiper
                 slidesPerView={1.1}
