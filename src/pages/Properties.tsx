@@ -657,15 +657,8 @@ const Properties = () => {
                     )}
                   </div>
 
-                  <Button onClick={handleSearchByName}>
-                    Buscar
-                  </Button>
-
-                  {isSearchingByName && (
-                    <Button variant="outline" onClick={clearSearchByName}>
-                      Limpar
-                    </Button>
-                  )}
+                  
+                  
                 </div>
               </div>
             </div>
@@ -727,9 +720,7 @@ const Properties = () => {
                   )}
                 </div>
 
-                <Button onClick={handleSearchByName}>
-                  Buscar
-                </Button>
+              
               </div>
             </div>
 
