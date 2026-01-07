@@ -123,10 +123,10 @@ const Index: React.FC = () => {
       <section className="relative h-[85vh] md:h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden">
 
         <picture>
-          <source media="(max-width: 768px)" srcSet="/heleno-hero2.webp" />
-          <source media="(min-width: 769px)" srcSet="/opt-hero-balneario.webp" />
+          <source media="(max-width: 768px)" srcSet="/hero-opt.webp" />
+          <source media="(min-width: 769px)" srcSet="/opt-hero-home.webp" />
           <img
-            src="/opt-hero-balneario.webp"
+            src="/opt-hero-home.webp"
             loading="eager"
             decoding="async"
             alt="Vista aérea de Balneário Camboriú"
