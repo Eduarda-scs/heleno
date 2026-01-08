@@ -6,6 +6,8 @@ import { getPropertyFromWebhook } from "@/hooks/Admin/ClientProperty";
 import { generateSlug } from "@/utils/slug";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { getSearchByName } from "@/hooks/Admin/getSearchByName";
+import posthog from "posthog-js";
+
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -89,6 +91,12 @@ const Filter = ({ options, selectedValue, onValueChange, placeholder, isOpen, on
 };
 
 const Properties = () => {
+  useEffect(() => {
+    posthog.capture("$pageview", {
+      page: "properties",
+    });
+  }, []);
+
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
