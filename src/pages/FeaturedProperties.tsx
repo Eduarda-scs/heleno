@@ -15,17 +15,17 @@ const properties = [
   {
     id: 2,
     title: "Blue View",
-    slug: "blue-view",
+    slug: "blue-view-tower/705",
     image: "/opt-planta.webp",
-    redirectToList: true, // 👈 vai para /empreendimentos
+    redirectToList: false, // 👈 vai para /empreendimentos
 
   },
   {
     id: 3,
     title: "Scnarium",
-    slug: "scnarium",
+    slug: "scenarium-brava-norte/722",
     image: "/opt-fgempreendimento.webp",
-    redirectToList: true, // 👈 vai para /empreendimentos
+    redirectToList: false, // 👈 vai para /empreendimentos
 
   },
   {
@@ -46,10 +46,10 @@ const properties = [
   },
   {
     id: 6,
-    title: "FG Empreendimento",
-    slug: "",
+    title: "Horizon Residence",
+    slug: "horizon-residence/199",
     image: "/opt-fg-innovation.webp",
-    redirectToList: true, // 👈 vai para /empreendimentos
+    redirectToList: false, // 👈 vai para /empreendimentos
 
   },
 ];
