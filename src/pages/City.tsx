@@ -252,9 +252,7 @@ export default function City() {
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Footer />
       </Suspense>
-      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <FloatingContactWidget />
-      </Suspense>
+      
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 
-const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 // Lazy Components (carregam apenas quando precisam)
 const Footer = lazy(() => import("@/components/Footer"));
@@ -235,9 +234,7 @@ const Index: React.FC = () => {
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
         <Footer />
       </Suspense>
-      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <FloatingContactWidget />
-      </Suspense>
+      
     </div>
   );
 };

@@ -18,7 +18,6 @@ import { sendLeadToWebhook } from "@/components/c2sapi";
 // Lazy Load components
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
-const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 
 
@@ -294,9 +293,7 @@ const Contact = () => {
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
       </Suspense>
-      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <FloatingContactWidget />
-      </Suspense>
+      
     </div>
   );
 };

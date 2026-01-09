@@ -11,6 +11,13 @@ export interface PaginatedPropertyResponse {
   property_types: any[];
 }
 
+export interface UniquePropertyResponse {
+  property: any;
+  categories: any[];
+  amenities: any[];
+  property_types: any[];
+}
+
 export async function getPropertyFromWebhook(page: number = 1, limit: number = 5, filters?: any) {
   const url = "https://webhook.wiseuptech.com.br/webhook/apiADMINpagination";
 
@@ -97,16 +104,18 @@ export async function getPropertyFromWebhook(page: number = 1, limit: number = 5
   }
 }
 
-export async function getUniquePropertyFromWebhook(propertyData: any) {
+export async function getUniquePropertyFromWebhook(propertyId: number): Promise<UniquePropertyResponse | null> {
   const url = "https://webhook.wiseuptech.com.br/webhook/ADMINuniqueITEM";
 
   try {
     const requestData = {
-      ...propertyData,
+      id: propertyId,
+      event_name: "get_unique_property",
       tenant_id: "1911202511"
     };
 
-    console.log("[PropertyService] 🔄 Buscando imóvel único:", requestData);
+    console.log("[PropertyService] 🔄 Buscando imóvel único com ID:", propertyId);
+    console.log("[PropertyService] 📤 Payload:", requestData);
 
     const response = await fetch(url, {
       method: "POST",
@@ -123,15 +132,35 @@ export async function getUniquePropertyFromWebhook(propertyData: any) {
     const rawData = await response.json();
     console.log("[PropertyService] ✅ Dados do imóvel único recebidos:", rawData);
 
-    if (Array.isArray(rawData) && rawData.length > 0) {
-      const firstItem = rawData[0];
+    if (Array.isArray(rawData) && rawData.length >= 2) {
+      const propertyData = rawData[0];
+      const optionsData = rawData[1];
 
-      if (firstItem.listProperty && Array.isArray(firstItem.listProperty) && firstItem.listProperty.length > 0) {
-        return firstItem.listProperty[0];
+      let property = null;
+      if (propertyData.listProperty && Array.isArray(propertyData.listProperty) && propertyData.listProperty.length > 0) {
+        property = propertyData.listProperty[0];
       }
+
+      const categories = optionsData.propertyCategory || [];
+      const amenities = optionsData.propertyAmenitie || [];
+      const property_types = optionsData.propertyType || [];
+
+      console.log("[PropertyService] 📊 Dados extraídos:");
+      console.log("   🏠 Property:", property ? "OK" : "NULL");
+      console.log("   📋 Categories:", categories.length, "itens");
+      console.log("   🎯 Amenities:", amenities.length, "itens");
+      console.log("   🏢 PropertyTypes:", property_types.length, "itens");
+
+      return {
+        property,
+        categories,
+        amenities,
+        property_types
+      };
     }
 
-    return rawData;
+    console.warn("[PropertyService] ⚠️ Formato de resposta inesperado:", rawData);
+    return null;
   } catch (error) {
     console.error("❌ Erro ao buscar imóvel único:", error);
     return null;

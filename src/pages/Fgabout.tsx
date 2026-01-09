@@ -17,7 +17,6 @@ import {
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer =  lazy(() => import("@/components/Footer"));
-const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 
 import { getEmpresasHeleno } from "@/components/supabaseActions";
@@ -480,9 +479,7 @@ export default function AboutFG() {
           <Footer />
         </Suspense>
       
-        <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-          <FloatingContactWidget />
-        </Suspense>
+        
     </div>
   );
 }

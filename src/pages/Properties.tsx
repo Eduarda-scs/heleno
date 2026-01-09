@@ -11,7 +11,6 @@ import posthog from "posthog-js";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
-const FloatingContactWidget = lazy(() => import("@/components/whatsapp"));
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -1035,9 +1034,7 @@ const Properties = () => {
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
       </Suspense>
-      <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
-        <FloatingContactWidget />
-      </Suspense>
+      
     </div>
   );
 };

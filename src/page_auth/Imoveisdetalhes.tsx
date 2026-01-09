@@ -6,11 +6,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, MapPin, Home, User, Shield, Bed, Bath, Car, Ruler, Play, Save, X, Trash2, Upload } from "lucide-react";
 import { usePropertyCRUD } from "@/hooks/Admin/PropertyCRUD";
 import { sendPropertyToWebhook } from "@/hooks/Admin/PropertyManager";
+import { getUniquePropertyFromWebhook } from "@/hooks/Admin/PropertyService";
 
 const Header = lazy(() => import("@/components/Header"));
 
 interface Amenity {
   id: number;
+  amenitie_id?: number;
   amenitie_name: string;
   amenitie_description: string | null;
   amenitie_color: string | null;
@@ -19,6 +21,7 @@ interface Amenity {
 
 interface Category {
   id: number;
+  category_id?: number;
   category_name: string;
   category_description: string | null;
   category_color: string | null;
@@ -27,6 +30,7 @@ interface Category {
 
 interface PropertyType {
   id: number;
+  property_type_id?: number;
   property_type_name: string;
   property_type_description: string | null;
   property_type_color: string | null;
@@ -95,13 +99,14 @@ export default function Imoveisdetalhes() {
   const [tipoMidiaSelecionada, setTipoMidiaSelecionada] = useState<"imagem" | "video">("imagem");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [allAmenities, setAllAmenities] = useState<Amenity[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [allPropertyTypes, setAllPropertyTypes] = useState<PropertyType[]>([]);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<number[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
-  const [selectedPropertyTypeId, setSelectedPropertyTypeId] = useState<number | null>(null);
+  const [selectedPropertyTypeIds, setSelectedPropertyTypeIds] = useState<number[]>([]);
 
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
   const [draggedVideoIndex, setDraggedVideoIndex] = useState<number | null>(null);
@@ -114,39 +119,99 @@ export default function Imoveisdetalhes() {
   const [selectedNewVideoIndex, setSelectedNewVideoIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (location.state?.imovel) {
-      const propriedade = location.state.imovel;
-      setImovel(propriedade);
-      setOriginalImovel(JSON.parse(JSON.stringify(propriedade)));
-
-      if ((location.state as LocationState).allAmenities) {
-        setAllAmenities((location.state as LocationState).allAmenities || []);
-      }
-      if ((location.state as LocationState).allCategories) {
-        setAllCategories((location.state as LocationState).allCategories || []);
-      }
-      if ((location.state as LocationState).allPropertyTypes) {
-        setAllPropertyTypes((location.state as LocationState).allPropertyTypes || []);
+    const loadPropertyData = async () => {
+      if (!id) {
+        console.error("[ImoveisDetalhes] ❌ ID não encontrado na URL");
+        setIsLoading(false);
+        return;
       }
 
-      setSelectedAmenityIds(propriedade.amenities?.map((a: Amenity) => a.id) || []);
-      setSelectedCategoryIds(propriedade.categories?.map((c: Category) => c.id) || []);
-      setSelectedPropertyTypeId(propriedade.property_types?.[0]?.id || null);
-      const coverImage = propriedade.images?.find(
-        (img: Image) => img.is_cover === "true"
-      );
-      setImagemPrincipal(coverImage?.url || propriedade.images?.[0]?.url || "");
+      setIsLoading(true);
 
-      if (propriedade.videos && propriedade.videos.length > 0) {
-        setVideoPrincipal(propriedade.videos[0].url);
+      try {
+        console.log("[ImoveisDetalhes] 🔄 Carregando dados do imóvel ID:", id);
+
+        const result = await getUniquePropertyFromWebhook(parseInt(id));
+
+        if (result && result.property) {
+          const propriedade = result.property;
+
+          console.log("[ImoveisDetalhes] ✅ Dados carregados:", {
+            property: propriedade,
+            categories: result.categories.length,
+            amenities: result.amenities.length,
+            property_types: result.property_types.length
+          });
+
+          setImovel(propriedade);
+          setOriginalImovel(JSON.parse(JSON.stringify(propriedade)));
+
+          setAllAmenities(result.amenities || []);
+          setAllCategories(result.categories || []);
+          setAllPropertyTypes(result.property_types || []);
+
+          const propertyAmenityIds = (propriedade.amenities || []).map((a: Amenity) => a.amenitie_id || a.id);
+          const propertyCategoryIds = (propriedade.categories || []).map((c: Category) => c.category_id || c.id);
+          const propertyTypeIds = (propriedade.property_types || []).map((pt: PropertyType) => pt.property_type_id || pt.id);
+
+          console.log("[ImoveisDetalhes] 🔍 IDs extraídos do imóvel:", {
+            amenityIds: propertyAmenityIds,
+            categoryIds: propertyCategoryIds,
+            propertyTypeIds: propertyTypeIds
+          });
+
+          setSelectedAmenityIds(propertyAmenityIds);
+          setSelectedCategoryIds(propertyCategoryIds);
+          setSelectedPropertyTypeIds(propertyTypeIds);
+
+          const coverImage = propriedade.images?.find(
+            (img: Image) => img.is_cover === "true"
+          );
+          setImagemPrincipal(coverImage?.url || propriedade.images?.[0]?.url || "");
+
+          if (propriedade.videos && propriedade.videos.length > 0) {
+            setVideoPrincipal(propriedade.videos[0].url);
+          }
+        } else {
+          console.error("[ImoveisDetalhes] ❌ Dados não encontrados para o ID:", id);
+          toast({
+            title: "Erro ao carregar imóvel",
+            description: "Não foi possível carregar os dados do imóvel.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("[ImoveisDetalhes] ❌ Erro ao carregar dados:", error);
+        toast({
+          title: "Erro ao carregar imóvel",
+          description: "Ocorreu um erro ao carregar os dados do imóvel.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [location.state, id]);
+    };
+
+    loadPropertyData();
+  }, [id, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg text-muted-foreground">Carregando detalhes...</p>
+      </div>
+    );
+  }
 
   if (!imovel) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-muted-foreground">Carregando detalhes...</p>
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground mb-4">Imóvel não encontrado</p>
+          <Button onClick={() => navigate("/admin/gestao-imoveis")}>
+            Voltar para gestão de imóveis
+          </Button>
+        </div>
       </div>
     );
   }
@@ -189,6 +254,21 @@ export default function Imoveisdetalhes() {
   };
 
   const handleEditClick = () => {
+    if (imovel) {
+      const propertyAmenityIds = (imovel.amenities || []).map((a: Amenity) => a.amenitie_id || a.id);
+      const propertyCategoryIds = (imovel.categories || []).map((c: Category) => c.category_id || c.id);
+      const propertyTypeIds = (imovel.property_types || []).map((pt: PropertyType) => pt.property_type_id || pt.id);
+
+      console.log("[ImoveisDetalhes] 🔄 Modo de edição ativado com seleções:", {
+        amenities: propertyAmenityIds,
+        categories: propertyCategoryIds,
+        property_types: propertyTypeIds
+      });
+
+      setSelectedAmenityIds(propertyAmenityIds);
+      setSelectedCategoryIds(propertyCategoryIds);
+      setSelectedPropertyTypeIds(propertyTypeIds);
+    }
     setIsEditing(true);
   };
 
@@ -196,15 +276,15 @@ export default function Imoveisdetalhes() {
     setImovel(JSON.parse(JSON.stringify(originalImovel)));
 
     setSelectedAmenityIds(
-      originalImovel?.amenities?.map((a: Amenity) => a.id) || []
+      originalImovel?.amenities?.map((a: Amenity) => a.amenitie_id || a.id) || []
     );
 
     setSelectedCategoryIds(
-      originalImovel?.categories?.map((c: Category) => c.id) || []
+      originalImovel?.categories?.map((c: Category) => c.category_id || c.id) || []
     );
 
-    setSelectedPropertyTypeId(
-      originalImovel?.property_types?.[0]?.id || null
+    setSelectedPropertyTypeIds(
+      originalImovel?.property_types?.map((pt: PropertyType) => pt.property_type_id || pt.id) || []
     );
 
     setNewPhotos([]);
@@ -231,8 +311,10 @@ export default function Imoveisdetalhes() {
     );
   };
 
-  const handleSelectPropertyType = (id: number) => {
-    setSelectedPropertyTypeId(id); // 👈 sempre substitui
+  const togglePropertyType = (id: number) => {
+    setSelectedPropertyTypeIds((prev) =>
+      prev.includes(id) ? prev.filter((pt) => pt !== id) : [...prev, id]
+    );
   };
 
 
@@ -420,7 +502,6 @@ export default function Imoveisdetalhes() {
     setIsSaving(true);
 
     try {
-      // 🔑 Fonte da verdade: IDs selecionados
       const selectedAmenities = allAmenities.filter(a =>
         selectedAmenityIds.includes(a.id)
       );
@@ -429,11 +510,19 @@ export default function Imoveisdetalhes() {
         selectedCategoryIds.includes(c.id)
       );
 
-      const selectedPropertyTypes = selectedPropertyTypeId
-        ? allPropertyTypes.filter(pt => pt.id === selectedPropertyTypeId)
-        : [];
+      const selectedPropertyTypes = allPropertyTypes.filter(pt =>
+        selectedPropertyTypeIds.includes(pt.id)
+      );
 
-      // 🧠 Imóvel atualizado reflete exatamente o estado atual da UI
+      console.log('[ImoveisDetalhes] 📊 Dados selecionados:', {
+        amenityIds: selectedAmenityIds,
+        categoryIds: selectedCategoryIds,
+        propertyTypeIds: selectedPropertyTypeIds,
+        selectedAmenities: selectedAmenities.length,
+        selectedCategories: selectedCategories.length,
+        selectedPropertyTypes: selectedPropertyTypes.length
+      });
+
       const updatedImovel = {
         ...imovel,
         amenities: selectedAmenities,
@@ -441,13 +530,11 @@ export default function Imoveisdetalhes() {
         property_types: selectedPropertyTypes,
       };
 
-      // 📸 Ordem das imagens
       const imagePositions = imovel.images.map((img, idx) => ({
         url: img.url,
         position: String(idx + 1),
       }));
 
-      // 🎥 Ordem dos vídeos
       const videoPositions = imovel.videos.map((video, idx) => ({
         url: video.url,
         position: String(idx + 1),
@@ -465,7 +552,6 @@ export default function Imoveisdetalhes() {
         has_new_media: hasNewMedia,
       });
 
-      // 🔄 Atualiza dados do imóvel (SEM mídia)
       await updateProperty({
         event_name: 'update_property',
         property_id: imovel.id,
@@ -473,7 +559,6 @@ export default function Imoveisdetalhes() {
         updated_data: updatedImovel,
       });
 
-      // 📤 Envia novas mídias, se houver
       if (hasNewMedia) {
         const allNewMedia = [...newPhotos, ...newVideos];
 
@@ -513,11 +598,9 @@ export default function Imoveisdetalhes() {
         await sendPropertyToWebhook(payload);
       }
 
-      // 🔄 Atualiza estados locais
       setImovel(updatedImovel);
       setOriginalImovel(JSON.parse(JSON.stringify(updatedImovel)));
 
-      // 🧹 Limpa estados temporários
       setNewPhotos([]);
       setNewVideos([]);
       setNewPhotoPreviews([]);
@@ -550,7 +633,6 @@ export default function Imoveisdetalhes() {
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Header />
       </Suspense>
-      {/* Container principal com padding-top para compensar o header fixo */}
       <div className="min-h-screen bg-background pt-24 pb-8 px-4 md:px-6">
         <div className="max-w-6xl mx-auto space-y-6">
           <Button
@@ -1108,9 +1190,9 @@ export default function Imoveisdetalhes() {
                                 <button
                                   key={pt.id}
                                   type="button"
-                                  onClick={() => handleSelectPropertyType(pt.id)}
+                                  onClick={() => togglePropertyType(pt.id)}
                                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                                    selectedPropertyTypeId === pt.id
+                                    selectedPropertyTypeIds.includes(pt.id)
                                       ? "bg-purple-600 text-white"
                                       : "bg-muted text-foreground hover:bg-muted/80"
                                   }`}
@@ -1131,7 +1213,7 @@ export default function Imoveisdetalhes() {
                             {imovel.property_types && imovel.property_types.length > 0 ? (
                               imovel.property_types.map((pt) => (
                                 <span
-                                  key={pt.id}
+                                  key={pt.property_type_id || pt.id}
                                   className="px-3 py-1 bg-muted text-foreground rounded-full text-sm font-medium"
                                 >
                                   {pt.property_type_emoji && (
@@ -1180,7 +1262,7 @@ export default function Imoveisdetalhes() {
                         {imovel.categories && imovel.categories.length > 0 ? (
                           imovel.categories.map((cat) => (
                             <span
-                              key={cat.id}
+                              key={cat.category_id || cat.id}
                               className="px-3 py-1 bg-muted text-foreground rounded-full text-sm font-medium"
                             >
                               {cat.category_emoji && (
@@ -1227,7 +1309,7 @@ export default function Imoveisdetalhes() {
                         {imovel.amenities && imovel.amenities.length > 0 ? (
                           imovel.amenities.map((amenity) => (
                             <span
-                              key={amenity.id}
+                              key={amenity.amenitie_id || amenity.id}
                               className="px-3 py-1 bg-muted text-foreground rounded-full text-sm font-medium"
                             >
                               {amenity.amenitie_emoji && (
@@ -1247,7 +1329,7 @@ export default function Imoveisdetalhes() {
             </div>
 
             <div className="lg:col-span-1">
-              <Card className="sticky top-24 shadow-lg"> {/* Alterado para top-24 para ficar abaixo do header */}
+              <Card className="sticky top-24 shadow-lg">
                 <CardHeader className="border-b border-border bg-muted/50">
                   <CardTitle className="text-lg">Outras Informações</CardTitle>
                 </CardHeader>
