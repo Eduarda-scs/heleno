@@ -18,7 +18,8 @@ import { usePropertyDetailStore } from "@/store/usePropertyDetailStore";
 import { useToast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/slug";
 import { useNavigate } from "react-router-dom";
-import { LeadModal } from "@/components/leadmodal";
+import { sendLeadToWebhook } from "@/components/c2sapi";
+
 
 
 import {
@@ -40,6 +41,14 @@ type MediaItem = {
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+const CORRETOR = {
+  nome: "Heleno Alves",
+  creci: "23.155-J",
+  telefone: "554792639593",
+  email: "helenoalves.alves@gmail.com",
+  foto: "/heleno-hero2.webp",
+};
+
 
 const PropertyDetails = () => {
   const { id, slug } = useParams();
@@ -51,7 +60,15 @@ const PropertyDetails = () => {
   const [lightboxClosing, setLightboxClosing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<MediaTab>("fotos");
-  const [openLeadModal, setOpenLeadModal] = useState(false);
+  
+
+  const [lead, setLead] = useState({
+    nome: "",
+    telefone: "",
+    email: "",
+    mensagem: "",
+  });
+
 
 
   const { toast } = useToast();
@@ -78,6 +95,16 @@ const PropertyDetails = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (!property) return;
+
+    setLead((prev) => ({
+      ...prev,
+      mensagem: `Olá, estou interessado no imóvel ${property.titulo} que encontrei no site. Aguardo seu retorno.`,
+    }));
+  }, [property]);
+
+
   const handleShare = () => {
     if (!property) return;
 
@@ -92,6 +119,34 @@ const PropertyDetails = () => {
       });
     });
   };
+  const handleSendLead = async () => {
+    if (!lead.nome || !lead.email) {
+      alert("Preencha ao menos nome e email");
+      return;
+    }
+
+    try {
+      await sendLeadToWebhook({
+        name: lead.nome,
+        email: lead.email,
+        phone: lead.telefone,
+        message: lead.mensagem,
+        source: "contact_page",
+      });
+
+      // Após salvar no c2s, abre o WhatsApp
+      window.open(
+        `https://wa.me/${CORRETOR.telefone}?text=${encodeURIComponent(
+          lead.mensagem
+        )}`,
+        "_blank"
+      );
+    } catch (error) {
+      console.error("Erro ao enviar lead", error);
+      alert("Erro ao enviar seus dados. Tente novamente.");
+    }
+  };
+
 
   useEffect(() => {
     if (!isMobile) return;
@@ -166,7 +221,6 @@ const PropertyDetails = () => {
       amenities: amenitiesArray,
       fotos: fotosArray,
       videos: videosArray,
-      whatsapp: "554792639593",
       status: true,
     };
   };
@@ -602,33 +656,101 @@ const PropertyDetails = () => {
                 {renderValores()}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <div className="bg-card p-3 sm:p-4 rounded-lg text-center">
-                  <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-black mx-auto mb-2" />
-                  <div className="text-xs sm:text-sm text-muted-foreground">Quartos</div>
-                  <div className="font-semibold text-sm sm:text-base">{property.quartos}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2">
+                {/* Quartos */}
+                <div
+                  className="
+                    group
+                    p-2 sm:p-3
+                    rounded-xl
+                    bg-white
+                    border border-[#d6b25e]/30
+                    shadow-sm shadow-[#00000014]
+                    hover:shadow-md hover:shadow-[#d6b25e55]
+                    hover:-translate-y-0.5
+                    transition-all
+                    duration-200
+                    text-center
+                  "
+
+
+                >
+                  <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-[#d6b25e] mx-auto mb-2" />
+                  <div className="text-xs sm:text-sm text-black/70">Quartos</div>
+                  <div className="font-semibold text-sm sm:text-base text-black">
+                    {property.quartos}
+                  </div>
                 </div>
 
-                <div className="bg-card p-3 sm:p-4 rounded-lg text-center">
-                  <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-black mx-auto mb-2" />
-                  <div className="text-xs sm:text-sm text-muted-foreground">Banheiros</div>
-                  <div className="font-semibold text-sm sm:text-base">{property.banheiros}</div>
+                {/* Banheiros */}
+                <div className="
+                  group
+                    p-2 sm:p-3
+                    rounded-xl
+                    bg-white
+                    border border-[#d6b25e]/30
+                    shadow-sm shadow-[#00000014]
+                    hover:shadow-md hover:shadow-[#d6b25e55]
+                    hover:-translate-y-0.5
+                    transition-all
+                    duration-200
+                    text-center
+                "
+                >
+                  <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-[#d6b25e] mx-auto mb-2" />
+                  <div className="text-xs sm:text-sm text-black/70">Banheiros</div>
+                  <div className="font-semibold text-sm sm:text-base text-black">
+                    {property.banheiros}
+                  </div>
                 </div>
 
-                <div className="bg-card p-3 sm:p-4 rounded-lg text-center">
-                  <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6 text-black mx-auto mb-2" />
-                  <div className="text-xs sm:text-sm text-muted-foreground">Área</div>
-                  <div className="font-semibold text-sm sm:text-base">{property.metros} m²</div>
+                {/* Área */}
+                <div className="
+                  group
+                    p-2 sm:p-3
+                    rounded-xl
+                    bg-white
+                    border border-[#d6b25e]/30
+                    shadow-sm shadow-[#00000014]
+                    hover:shadow-md hover:shadow-[#d6b25e55]
+                    hover:-translate-y-0.5
+                    transition-all
+                    duration-200
+                    text-center
+                "
+                >
+                  <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#d6b25e] mx-auto mb-2" />
+                  <div className="text-xs sm:text-sm text-black/70">Área</div>
+                  <div className="font-semibold text-sm sm:text-base text-black">
+                    {property.metros} m²
+                  </div>
                 </div>
 
+                {/* Vagas */}
                 {property.vagas && property.vagas > 0 && (
-                  <div className="bg-card p-3 sm:p-4 rounded-lg text-center">
-                    <Car className="w-5 h-5 sm:w-6 sm:h-6 text-black mx-auto mb-2" />
-                    <div className="text-xs sm:text-sm text-muted-foreground">Vagas</div>
-                    <div className="font-semibold text-sm sm:text-base">{property.vagas}</div>
+                  <div className="
+                    group
+                    p-2 sm:p-3
+                    rounded-xl
+                    bg-white
+                    border border-[#d6b25e]/30
+                    shadow-sm shadow-[#00000014]
+                    hover:shadow-md hover:shadow-[#d6b25e55]
+                    hover:-translate-y-0.5
+                    transition-all
+                    duration-200
+                    text-center
+                  "
+                  >
+                    <Car className="w-5 h-5 sm:w-6 sm:h-6 text-[#d6b25e] mx-auto mb-2" />
+                    <div className="text-xs sm:text-sm text-black/70">Vagas</div>
+                    <div className="font-semibold text-sm sm:text-base text-black">
+                      {property.vagas}
+                    </div>
                   </div>
                 )}
               </div>
+
 
               <div className="flex gap-2 mb-4">
                 <button
@@ -757,35 +879,80 @@ const PropertyDetails = () => {
               {renderDiferenciais()}
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 bg-card p-6 sm:p-8 rounded-xl shadow-[var(--shadow-medium)] space-y-4">
+            <div class="bg-card border border-border rounded-xl p-6 
+              shadow-[0_10px_25px_rgba(0,0,0,0.12)] 
+              transition-all hover:shadow-[0_15px_35px_rgba(0,0,0,0.18)]">
+
+
+              <div className="sticky top-24 bg-card p-6 sm:p-8 rounded-xl shadow-[var(--shadow-medium)] space-y-5">
                 <h3 className="text-xl sm:text-2xl font-bold">Interessado?</h3>
 
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Fale diretamente com Heleno!
-                </p>
+                {/* Corretor */}
+                <div className="flex items-center gap-3">
+                  <img
+                    src={CORRETOR.foto}
+                    alt={CORRETOR.nome}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
 
-                <Button variant="gold" size="lg" className="w-full" asChild>
-                  <a
-                    href={`https://wa.me/${property.whatsapp}?text=Olá, venho do seu site tenho interesse no imóvel ${property.titulo}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    WhatsApp
-                  </a>
-                </Button>
+                  <div>
+                    <p className="font-semibold">{CORRETOR.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      CRECI {CORRETOR.creci}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {CORRETOR.telefone}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {CORRETOR.email}
+                    </p>
+                  </div>
+                </div>
 
+                {/* Formulário */}
+                <div className="space-y-3">
+                  <input
+                    className="w-full border rounded-md px-3 py-2 text-sm"
+                    placeholder="Seu nome"
+                    value={lead.nome}
+                    onChange={(e) => setLead({ ...lead, nome: e.target.value })}
+                  />
+
+                  <input
+                    className="w-full border rounded-md px-3 py-2 text-sm"
+                    placeholder="Seu telefone"
+                    value={lead.telefone}
+                    onChange={(e) => setLead({ ...lead, telefone: e.target.value })}
+                  />
+
+                  <input
+                    className="w-full border rounded-md px-3 py-2 text-sm"
+                    placeholder="Seu email"
+                    value={lead.email}
+                    onChange={(e) => setLead({ ...lead, email: e.target.value })}
+                  />
+
+                  <textarea
+                    className="w-full border rounded-md px-3 py-2 text-sm min-h-[90px]"
+                    value={lead.mensagem}
+                    onChange={(e) => setLead({ ...lead, mensagem: e.target.value })}
+                  />
+                </div>
+
+                {/* WhatsApp */}
                 <Button
-                  variant="hero"
+                  variant="gold"
                   size="lg"
                   className="w-full"
-                  onClick={() => setOpenLeadModal(true)}
+                  onClick={handleSendLead}
                 >
-                  Deixe seu contato
+                  <MessageCircle className="w-5 h-5" />
+                  Enviar por WhatsApp
                 </Button>
 
+               
               </div>
+
             </div>
           </div>
         </div>
@@ -838,44 +1005,53 @@ const PropertyDetails = () => {
 
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`
-              relative w-full
-              ${isMobile ? "max-h-[85vh] h-[85vh] rounded-t-2xl" : "h-full rounded-lg"}
-              bg-black flex items-center justify-center p-4 overflow-hidden
-
-              ${isMobile ? (lightboxClosing ? "mobile-slide-down" : "mobile-slide-up") : ""}
-            `}
+            className="
+              relative
+              w-full
+              h-full
+              flex
+              items-center
+              gap-4
+              px-6
+            "
           >
+
+            {/* BOTÃO FECHAR — FUNCIONA MOBILE + DESKTOP */}
             <button
-              className="absolute top-4 right-4 text-white z-20 bg-black/50 rounded-full p-2 backdrop-blur-md hover:bg-black/70 transition-colors"
+              className="
+                absolute
+                top-4
+                right-4
+                z-30
+                text-white
+                bg-black/15
+                rounded-full
+                p-2
+                backdrop-blur-md
+                hover:bg-black/70
+                transition
+              "
               onClick={closeLightbox}
             >
               <X className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
 
+            {/* SETA ESQUERDA — DESKTOP */}
             {!isMobile && (
-              <>
-                <button
-                  className="absolute left-4 sm:left-6 text-white z-20 bg-black/50 rounded-full p-2 backdrop-blur-md hover:bg-black/70 transition-colors"
-                  onClick={prevMedia}
-                >
-                  <ArrowLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-                </button>
-
-                <button
-                  className="absolute right-4 sm:right-6 text-white z-20 bg-black/50 rounded-full p-2 backdrop-blur-md hover:bg-black/70 transition-colors rotate-180"
-                  onClick={nextMedia}
-                >
-                  <ArrowLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-                </button>
-              </>
+              <button
+                className="absolute left-6 z-20 bg-black/50 rounded-full p-2 backdrop-blur-md hover:bg-black/70"
+                onClick={prevMedia}
+              >
+                <ArrowLeft className="w-8 h-8 text-white" />
+              </button>
             )}
 
-            <div className="max-w-4xl w-full flex items-center justify-center">
+            {/* 🔥 MÍDIA — AGORA APARECE NO MOBILE */}
+            <div className="w-full max-w-4xl flex items-center justify-center">
               {currentMedia?.type === "image" ? (
                 <img
                   src={currentMedia?.url ?? ""}
-                  className="w-full max-h-[70vh] sm:max-h-[80vh] object-contain rounded-lg"
+                  className="w-full max-h-[85vh] object-contain rounded-lg"
                   alt="Visualização ampliada"
                 />
               ) : (
@@ -883,10 +1059,141 @@ const PropertyDetails = () => {
                   src={currentMedia?.url ?? ""}
                   controls
                   autoPlay
-                  className="w-full max-h-[70vh] sm:max-h-[80vh] rounded-lg"
+                  className="w-full max-h-[85vh] rounded-lg"
                 />
               )}
             </div>
+
+            {/* SETA DIREITA — DESKTOP */}
+            {!isMobile && (
+              <button
+                className=" right-6 z-20 bg-black/50 rounded-full p-2 backdrop-blur-md hover:bg-black/70 rotate-180"
+                onClick={nextMedia}
+              >
+                <ArrowLeft className="w-8 h-8 text-white" />
+              </button>
+            )}
+
+            {/* 👆 INDICADOR DISCRETO — MOBILE */}
+            {isMobile && gallery.length > 1 && (
+              <>
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                  <div className="bg-black/40 backdrop-blur-md rounded-full p-2 animate-pulse">
+                    <ArrowLeft className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                  <div className="bg-black/40 backdrop-blur-md rounded-full p-2 animate-pulse rotate-180">
+                    <ArrowLeft className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ÁREAS DE TOQUE — MOBILE */}
+            {isMobile && (
+              <>
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-1/3 z-10"
+                  onClick={prevMedia}
+                />
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-1/3 z-10"
+                  onClick={nextMedia}
+                />
+              </>
+            )}
+            {!isMobile && (
+              <div
+                className="
+                  w-[360px]
+                  bg-white
+                  rounded-2xl
+                  shadow-2xl
+                  p-6
+                  shrink-0
+                "
+              >
+                {/* SEU CARD AQUI */}
+                <div class="bg-card border border-border rounded-xl p-6 
+                  shadow-[0_10px_25px_rgba(0,0,0,0.12)] 
+                  transition-all hover:shadow-[0_15px_35px_rgba(0,0,0,0.18)]">
+
+
+                  <div className="sticky top-24 bg-card p-6 sm:p-8 rounded-xl shadow-[var(--shadow-medium)] space-y-5">
+                    <h3 className="text-xl sm:text-2xl font-bold">Interessado?</h3>
+
+                    {/* Corretor */}
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={CORRETOR.foto}
+                        alt={CORRETOR.nome}
+                        className="w-14 h-14 rounded-full object-cover"
+                      />
+
+                      <div>
+                        <p className="font-semibold">{CORRETOR.nome}</p>
+                        <p className="text-xs text-muted-foreground">
+                          CRECI {CORRETOR.creci}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {CORRETOR.telefone}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {CORRETOR.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Formulário */}
+                    <div className="space-y-3">
+                      <input
+                        className="w-full border rounded-md px-3 py-2 text-sm"
+                        placeholder="Seu nome"
+                        value={lead.nome}
+                        onChange={(e) => setLead({ ...lead, nome: e.target.value })}
+                      />
+
+                      <input
+                        className="w-full border rounded-md px-3 py-2 text-sm"
+                        placeholder="Seu telefone"
+                        value={lead.telefone}
+                        onChange={(e) => setLead({ ...lead, telefone: e.target.value })}
+                      />
+
+                      <input
+                        className="w-full border rounded-md px-3 py-2 text-sm"
+                        placeholder="Seu email"
+                        value={lead.email}
+                        onChange={(e) => setLead({ ...lead, email: e.target.value })}
+                      />
+
+                      <textarea
+                        className="w-full border rounded-md px-3 py-2 text-sm min-h-[90px]"
+                        value={lead.mensagem}
+                        onChange={(e) => setLead({ ...lead, mensagem: e.target.value })}
+                      />
+                    </div>
+
+                    {/* WhatsApp */}
+                    <Button
+                      variant="gold"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleSendLead}
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Enviar por WhatsApp
+                    </Button>
+
+                    
+                  </div>
+
+                </div>
+              </div>
+            )}
+
 
             {isMobile && gallery.length > 1 && (
               <>
@@ -925,12 +1232,7 @@ const PropertyDetails = () => {
           </div>
         </div>
       )}
-      <LeadModal
-        open={openLeadModal}
-        onClose={() => setOpenLeadModal(false)}
-        propertyTitle={property.titulo}
-      />
-
+      
     </div>
   );
 };
