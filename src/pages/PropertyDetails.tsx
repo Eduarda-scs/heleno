@@ -43,7 +43,7 @@ const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 const CORRETOR = {
   nome: "Heleno Alves",
-  creci: "23.155-J",
+  creci: "7449",
   telefone: "554792639593",
   email: "helenoalves.alves@gmail.com",
   foto: "/heleno-hero2.webp",
