@@ -15,6 +15,8 @@ import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Users from "lucide-react/dist/esm/icons/users";
 import Waves from "lucide-react/dist/esm/icons/waves";
+import FloatingContactWidget from "@/components/whatsapp";
+
 
 
 // Imagens
@@ -251,6 +253,7 @@ export default function City() {
       <Suspense fallback={<div className="h-20 w-full" />}>
         <Footer />
       </Suspense>
+      <FloatingContactWidget />
       
     </div>
   );

@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { lazy, Suspense, useRef, useEffect, useState } from "react";
+import FloatingContactWidget from "@/components/whatsapp";
 
 
 const Header = lazy(() => import("@/components/Header"));
@@ -568,6 +569,7 @@ const nextItem = () => {
       <Suspense fallback={<div>Carregando...</div>}>
         <Footer />
       </Suspense>
+      <FloatingContactWidget />
       
      
     </div>

@@ -13,6 +13,8 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
+import FloatingContactWidget from "@/components/whatsapp";
+
 
 
 const Header = lazy(() => import("@/components/Header"));
@@ -478,6 +480,7 @@ export default function AboutFG() {
       <Suspense fallback={<div className="h-32 w-full"></div>}>
           <Footer />
         </Suspense>
+      <FloatingContactWidget />
       
         
     </div>

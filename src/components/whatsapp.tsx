@@ -23,7 +23,7 @@ const FloatingContactWidget = () => {
       setTimeout(() => {
         setOpenOptions(false);
       }, 7000);
-    }, 20000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [sent]);

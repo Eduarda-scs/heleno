@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { sendLeadToWebhook } from "@/components/c2sapi";
+import FloatingContactWidget from "@/components/whatsapp";
+
 
 
 // Lazy Load components
@@ -293,6 +295,7 @@ const Contact = () => {
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
       </Suspense>
+      <FloatingContactWidget />
       
     </div>
   );

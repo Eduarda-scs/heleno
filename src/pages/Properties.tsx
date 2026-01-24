@@ -7,6 +7,8 @@ import { generateSlug } from "@/utils/slug";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { getSearchByName } from "@/hooks/Admin/getSearchByName";
 import posthog from "posthog-js";
+import FloatingContactWidget from "@/components/whatsapp";
+
 
 
 const Header = lazy(() => import("@/components/Header"));
@@ -1034,6 +1036,7 @@ const Properties = () => {
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
       </Suspense>
+      <FloatingContactWidget />
       
     </div>
   );

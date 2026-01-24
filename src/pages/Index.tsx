@@ -15,6 +15,8 @@ import Heart from "lucide-react/dist/esm/icons/heart";
 import ShieldCheck from "lucide-react/dist/esm/icons/shield-check";
 import Star from "lucide-react/dist/esm/icons/star";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import FloatingContactWidget from "@/components/whatsapp";
+
 
 
 // Serviço
@@ -234,6 +236,7 @@ const Index: React.FC = () => {
       <Suspense fallback={<div className="h-28 w-full bg-[#07262d]" />}>
         <Footer />
       </Suspense>
+      <FloatingContactWidget />
       
     </div>
   );
