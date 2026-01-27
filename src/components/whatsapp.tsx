@@ -1,136 +1,92 @@
 import { useEffect, useState } from "react";
 import { X, MessageCircle, Mail } from "lucide-react";
 import { sendLeadToWebhook } from "@/components/c2sapi";
+import Whatsappmodal  from "@/components/whatsappmodal";
+
+const clients = [
+  {
+    name: "Ana",
+    avatar: "modelo1.jpg",
+    message: "Atendimento excelente!"
+  },
+  {
+    name: "Carlos",
+    avatar: "modelo2.jpg",
+    message: "Fui atendida muito rápido!"
+  },
+  {
+    name: "Juliana",
+    avatar: "modelo3.jpg",
+    message: "Recomendo demais!"
+  },
+  {
+    name: "Marcos",
+    avatar: "modelo4.jpg",
+    message: "Corretor super atencioso!"
+  }
+
+];
 
 const FloatingContactWidget = () => {
   const [openOptions, setOpenOptions] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const [openChat, setOpenChat] = useState(false);
   const [sent, setSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [clientIndex, setClientIndex] = useState(0);
+  const [showMessageCTA, setShowMessageCTA] = useState(false);
+  const [showWhatsappIcon, setShowWhatsappIcon] = useState(false);
+
+
+
+  const currentClient = clients[clientIndex];
+
 
   const phoneNumber = "5547992639593";
   const message = encodeURIComponent(
     "Oi! Cheguei até você pelo site e queria saber mais sobre os imóveis em Balneário Camboriú."
   );
+  
+
 
   // Mostra opções automaticamente a cada 30s
   useEffect(() => {
     if (sent) return;
 
     const interval = setInterval(() => {
-      setOpenOptions(true);
+      setShowWhatsappIcon((prev) => !prev);
+
+      if (!showWhatsappIcon) {
+        // troca cliente
+        setClientIndex((prev) => (prev + 1) % clients.length);
+      }
+
+      setShowMessageCTA(true);
 
       setTimeout(() => {
-        setOpenOptions(false);
-      }, 7000);
-    }, 15000);
+        setShowMessageCTA(false);
+      }, 6000);
+    }, 8000); // pode ajustar o tempo aqui
 
     return () => clearInterval(interval);
-  }, [sent]);
+  }, [sent, showWhatsappIcon]);
+
+
+
 
   return (
     <>
-      {/* ===== MODAL DE LEAD ===== */}
-      {openModal && (
-        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end md:items-center justify-center">
-          <div className="bg-white w-full md:w-[380px] rounded-t-2xl md:rounded-2xl shadow-2xl animate-slideUp">
-            <div className="flex items-center justify-between px-4 py-3 border-b">
-              <h2 className="text-lg font-semibold">Deixe seu contato</h2>
-              <button onClick={() => setOpenModal(false)}>
-                <X className="w-5 h-5 text-neutral-500" />
-              </button>
-            </div>
+      <Whatsappmodal
+        open={openChat}
+        onClose={() => setOpenChat(false)}
+        avatar={currentClient.avatar}
+        name="Heleno"
+      />
 
-            <div className="p-4">
-              {!sent ? (
-                <form
-                  className="space-y-3"
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const email = (formData.get("email") as string).trim();
-
-                    if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
-                      setEmailError(
-                        "Digite um e-mail válido do Gmail (ex: nome@gmail.com)"
-                      );
-                      return;
-                    }
-
-                    setEmailError(null);
-
-                    await sendLeadToWebhook({
-                      name: formData.get("name") as string,
-                      phone: formData.get("phone") as string,
-                      email,
-                      message: formData.get("message") as string,
-                      source: "floating-widget",
-                    });
-
-                    setSent(true);
-                  }}
-                >
-                  <input
-                    name="name"
-                    required
-                    placeholder="Nome"
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-
-                  <input
-                    name="phone"
-                    required
-                    placeholder="Telefone"
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-
-                  <div>
-                    <input
-                      name="email"
-                      required
-                      placeholder="E-mail (Gmail)"
-                      onChange={() => setEmailError(null)}
-                      className={`w-full border rounded-lg px-3 py-2 ${
-                        emailError && "border-red-500"
-                      }`}
-                    />
-                    {emailError && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {emailError}
-                      </p>
-                    )}
-                  </div>
-
-                  <textarea
-                    name="message"
-                    required
-                    rows={3}
-                    placeholder="Mensagem"
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-
-                  <button className="w-full bg-primary text-white py-2 rounded-xl">
-                    Enviar contato
-                  </button>
-                </form>
-              ) : (
-                <div className="text-center py-8">
-                  <h3 className="text-lg font-semibold text-primary">
-                    Obrigado! 🎉
-                  </h3>
-                  <p className="text-sm text-neutral-600">
-                    Em breve entraremos em contato.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ===== WIDGET FLUTUANTE ===== */}
       <div className="fixed bottom-6 right-6 z-50 flex items-end gap-3">
-        {/* CARD DE OPÇÕES */}
+        {/* CARD DE OPÇÕES 
         {openOptions && !sent && (
           <div className="bg-white rounded-2xl shadow-xl p-4 w-[260px] animate-slideLeft">
             <p className="text-sm text-neutral-700 mb-3">
@@ -158,16 +114,48 @@ const FloatingContactWidget = () => {
               Deixar contato
             </button>
           </div>
+        )}""*/}
+        {showMessageCTA && !sent && (
+          <button
+            onClick={() => {
+              setOpenChat(true);
+              setShowMessageCTA(false);
+            }}
+            className="bg-white text-sm text-neutral-800 px-4 py-2 rounded-full shadow-lg animate-slideLeft max-w-[240px]"
+          >
+            {showWhatsappIcon ? (
+              <>Fale com o melhor corretor de Balneário Camboriú!!</>
+            ) : (
+              <> {currentClient.message}</>
+            )}
+          </button>
         )}
+
+
+    
+
 
         {/* BOTÃO PRINCIPAL */}
         <button
-          onClick={() => setOpenOptions((prev) => !prev)}
-          className="bg-[#25D366] text-white p-4 rounded-full shadow-xl hover:scale-110 transition"
-          aria-label="Abrir opções de contato"
+          onClick={() => {
+            setOpenChat(true);
+            setShowMessageCTA(false);
+          }}
+          className="relative w-14 h-14 rounded-full shadow-xl overflow-hidden hover:scale-110 transition bg-[#25D366] flex items-center justify-center"
         >
-          <MessageCircle className="w-6 h-6" />
+          {showWhatsappIcon ? (
+            <MessageCircle className="w-7 h-7 text-white" />
+          ) : (
+            <img
+              key={currentClient.avatar}
+              src={`/${currentClient.avatar}`}
+              alt={currentClient.name}
+              className="w-full h-full object-cover rounded-full"
+            />
+          )}
         </button>
+
+
       </div>
     </>
   );
