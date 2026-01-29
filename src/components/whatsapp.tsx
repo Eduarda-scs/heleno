@@ -7,22 +7,22 @@ const clients = [
   {
     name: "Ana",
     avatar: "modelo1.jpg",
-    message: "Atendimento excelente!"
+    message: "Fale com o melhor corretor de Balneário Camboriú!!"
   },
   {
     name: "Carlos",
     avatar: "modelo2.jpg",
-    message: "Fui atendida muito rápido!"
+    message: "Fale com o melhor corretor de Balneário Camboriú!!"
   },
   {
     name: "Juliana",
     avatar: "modelo3.jpg",
-    message: "Recomendo demais!"
+    message: "Fale com o melhor corretor de Balneário Camboriú!!"
   },
   {
     name: "Marcos",
     avatar: "modelo4.jpg",
-    message: "Corretor super atencioso!"
+    message: "Fale com o melhor corretor de Balneário Camboriú!!"
   }
 
 ];
@@ -117,10 +117,7 @@ const FloatingContactWidget = () => {
         )}""*/}
         {showMessageCTA && !sent && (
           <button
-            onClick={() => {
-              setOpenChat(true);
-              setShowMessageCTA(false);
-            }}
+            
             className="bg-white text-sm text-neutral-800 px-4 py-2 rounded-full shadow-lg animate-slideLeft max-w-[240px]"
           >
             {showWhatsappIcon ? (
@@ -135,7 +132,7 @@ const FloatingContactWidget = () => {
     
 
 
-        {/* BOTÃO PRINCIPAL */}
+        {/* BOTÃO PRINCIPAL
         <button
           onClick={() => {
             setOpenChat(true);
@@ -153,7 +150,19 @@ const FloatingContactWidget = () => {
               className="w-full h-full object-cover rounded-full"
             />
           )}
-        </button>
+        </button>*/}
+        {/* BOTÃO PRINCIPAL — REDIRECT WHATSAPP */}
+        <a
+          href="https://wa.me/5547992639593?text=Olá!%20Vim%20através%20do%20site%20e%20gostaria%20de%20mais%20informações."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 rounded-full shadow-xl bg-[#25D366]
+                    flex items-center justify-center
+                    hover:scale-110 transition"
+        >
+          <MessageCircle className="w-7 h-7 text-white" />
+        </a>
+
 
 
       </div>

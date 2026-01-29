@@ -24,6 +24,7 @@ const AboutFG = lazy(() => import("./pages/Fgabout"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+
 const PoliticasCookies = lazy(() => import("./pages/PoliticasCookies"));
 const PoliticasPrivacidade = lazy(() => import("./pages/politicaprivacidade"));
 const TermosUso = lazy(() => import("./pages/termodeuso"));

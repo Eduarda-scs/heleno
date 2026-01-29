@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, User, ChevronDown, LogOut, Building2, Heart, HelpCircle, ListChecks } from "lucide-react";
+import { Menu, X, User, ChevronDown, LogOut, Building2, Heart, HelpCircle, ListChecks, BarChart3  } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -248,6 +248,13 @@ const navigation = [
                             >
                               <ListChecks className="w-4 h-4 mr-3" />
                               Campos Extras
+                            </button>
+                            <button
+                              onClick={() => handleNavigate('/admin/dashboard')}
+                              className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            >
+                              <BarChart3 className="w-4 h-4 mr-3" />
+                              Dashboard
                             </button>
                           </>
                         ) : (
