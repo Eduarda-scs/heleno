@@ -78,17 +78,23 @@ const PropertySearch = ({ onSearchResults, onClearSearch }: PropertySearchProps)
     if (!searchName.trim()) return;
 
     try {
-      setIsLoading(true);
-      setShowSuggestions(false);
-      const results = await getSearchByName(searchName);
-      onSearchResults(results, true);
+        setIsLoading(true);
+
+        // fecha sugestões ao confirmar
+        setShowSuggestions(false);
+
+        const results = await getSearchByName(searchName);
+
+        // 🔥 aqui é o ponto-chave
+        onSearchResults(results, true);
     } catch (error) {
-      console.error("❌ Erro na busca:", error);
-      onSearchResults([], true);
+        console.error("❌ Erro na busca:", error);
+        onSearchResults([], true);
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+    };
+
 
   const handleClear = () => {
     setSearchName("");
@@ -105,7 +111,12 @@ const PropertySearch = ({ onSearchResults, onClearSearch }: PropertySearchProps)
           type="text"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+            }
+            }}
           placeholder="Buscar imóvel por nome..."
           className="w-full pl-10 pr-10 py-2.5 bg-card border border-border rounded-lg text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
         />

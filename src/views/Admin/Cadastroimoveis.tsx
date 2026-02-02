@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Trash2, Eye, User, Shield, ChevronLeft, ChevronRight, Image as ImageIcon, Filter } from "lucide-react";
+import { Search, PlusCircle, Trash2, Eye, User, Shield, ChevronLeft, ChevronRight, Image as ImageIcon, Filter } from "lucide-react";
 import ModalCadastroImovel from "@/components/ModalCadastroImovel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getPropertyFromWebhook, getUniquePropertyFromWebhook } from "@/hooks/Admin/PropertyService";
@@ -19,6 +19,7 @@ import { removeProperty } from "@/hooks/Admin/RemoveProperty";
 import { useToast } from "@/components/ui/use-toast";
 import { useCategoryAmenitie } from "@/hooks/Admin/CategoryAmenitie";
 import PropertySearch from "./PropertySearch"; // ADICIONE ESTA LINHA
+
 
 const Header = lazy(() => import("@/components/Header"));
 
@@ -94,6 +95,7 @@ export default function CadastroImoveis() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const [searchResults, setSearchResults] = useState<Property[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -155,26 +157,23 @@ export default function CadastroImoveis() {
   }
 
   // NOVA FUNÇÃO: Manipular resultados da busca
-  const handleSearchResults = (results: any[], isSearching: boolean) => {
+  const handleSearchResults = (results: Property[], isSearching: boolean) => {
     setIsSearchingByName(isSearching);
-    if (isSearching && results.length > 0) {
-      setImoveis(results);
-      setTotalItems(results.length);
-      setTotalPages(Math.ceil(results.length / itemsPerPage));
-    } else if (isSearching && results.length === 0) {
-      setImoveis([]);
-      setTotalItems(0);
-      setTotalPages(1);
-    }
+    setSearchResults(results);
     setCurrentPage(1);
+
+    setTotalItems(results.length);
+    setTotalPages(Math.ceil(results.length / itemsPerPage));
   };
+
 
   // NOVA FUNÇÃO: Limpar busca
   const handleClearSearch = () => {
     setIsSearchingByName(false);
-    carregarImoveis(1, itemsPerPage);
+    setSearchResults([]);
     setBusca("");
     setCurrentPage(1);
+    carregarImoveis(1, itemsPerPage);
   };
 
   // Carregar categorias, amenidades e tipos de propriedade
@@ -410,12 +409,12 @@ export default function CadastroImoveis() {
   };
 
   // ATUALIZADO: Filtrar imóveis apenas quando não estiver em busca por nome
-  const imoveisFiltrados = isSearchingByName 
-    ? imoveis 
-    : imoveis.filter((i) => {
-        const buscaMatch = i.property_title?.toLowerCase().includes(busca.toLowerCase());
-        return buscaMatch;
-      });
+  const imoveisFiltrados = isSearchingByName
+  ? searchResults
+  : imoveis.filter((i) =>
+      i.property_title?.toLowerCase().includes(busca.toLowerCase())
+    );
+
 
   const goToNextPage = () => {
     if (currentPage < totalPages && !isLoadingProperties && !isSearchingByName) {
@@ -460,6 +459,11 @@ export default function CadastroImoveis() {
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+
+  const imoveisParaRenderizar = isSearchingByName
+  ? imoveisFiltrados.slice(startIndex, endIndex)
+  : imoveisFiltrados;
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -620,7 +624,7 @@ export default function CadastroImoveis() {
 
                   <TableBody>
                     {imoveisFiltrados.length > 0 ? (
-                      imoveisFiltrados.slice(startIndex, endIndex).map((imovel) => {
+                      imoveisParaRenderizar.map((imovel) => {
                         const criadoPor = getCriadoPorTipo(imovel);
                         const firstImage = getFirstImage(imovel);
 
@@ -731,7 +735,7 @@ export default function CadastroImoveis() {
             ) : (
               <div className="space-y-4">
                 {imoveisFiltrados.length > 0 ? (
-                  imoveisFiltrados.slice(startIndex, endIndex).map((imovel) => {
+                  imoveisParaRenderizar.map((imovel) => {
                     const firstImage = getFirstImage(imovel);
                     const criadoPor = getCriadoPorTipo(imovel);
 
@@ -873,8 +877,11 @@ export default function CadastroImoveis() {
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">
-                {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                {isSearchingByName
+                  ? `${startIndex + 1}-${Math.min(endIndex, searchResults.length)} de ${searchResults.length}`
+                  : `${startIndex + 1}-${Math.min(endIndex, totalItems)} de ${totalItems}`}
               </span>
+
             </div>
 
             <div className="flex items-center gap-2">
@@ -882,7 +889,10 @@ export default function CadastroImoveis() {
                 variant="outline"
                 size="sm"
                 onClick={goToPrevPage}
-                disabled={currentPage === 1 || isLoadingProperties}
+                disabled={
+                  currentPage === 1 ||
+                  (!isSearchingByName && isLoadingProperties)
+                }
                 className="flex items-center gap-1 hover:bg-[#07262d] hover:text-white"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -897,7 +907,11 @@ export default function CadastroImoveis() {
                 variant="outline"
                 size="sm"
                 onClick={goToNextPage}
-                disabled={currentPage === totalPages || isLoadingProperties}
+                disabled={
+                  currentPage === totalPages ||
+                  (!isSearchingByName && isLoadingProperties)
+                }
+
                 className="flex items-center gap-1 hover:bg-[#07262d] hover:text-white"
               >
                 Próxima
