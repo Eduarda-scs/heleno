@@ -1,3 +1,4 @@
+// Cadastroimoveis.tsx ATUALIZADO
 import { useEffect, useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { getPropertyFromWebhook, getUniquePropertyFromWebhook } from "@/hooks/Ad
 import { removeProperty } from "@/hooks/Admin/RemoveProperty";
 import { useToast } from "@/components/ui/use-toast";
 import { useCategoryAmenitie } from "@/hooks/Admin/CategoryAmenitie";
-
+import PropertySearch from "./PropertySearch"; // ADICIONE ESTA LINHA
 
 const Header = lazy(() => import("@/components/Header"));
 
@@ -81,10 +82,12 @@ interface Property {
 
 export default function CadastroImoveis() {
   const [imoveis, setImoveis] = useState<Property[]>([]);
+  const [imoveisOriginais, setImoveisOriginais] = useState<Property[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
   const [busca, setBusca] = useState("");
+  const [isSearchingByName, setIsSearchingByName] = useState(false); // NOVO ESTADO
   const [filtroCriadoPor, setFiltroCriadoPor] = useState<string>("todos");
   const [selecionados, setSelecionados] = useState<number[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -99,7 +102,6 @@ export default function CadastroImoveis() {
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const { getCategoryAmenitie } = useCategoryAmenitie();
-
 
   async function carregarImoveis(page: number = 1, limit: number = 5) {
     setIsLoadingProperties(true);
@@ -123,24 +125,27 @@ export default function CadastroImoveis() {
       if (retorno) {
         if (retorno.properties) {
           setImoveis(retorno.properties);
+          if (!isSearchingByName) {
+            setImoveisOriginais(retorno.properties);
+          }
         } else {
           setImoveis([]);
+          setImoveisOriginais([]);
         }
-
-        
 
         setTotalPages(retorno.total_pages || 1);
         setTotalItems(retorno.total_items || 0);
         setCurrentPage(retorno.page || page);
       } else {
         setImoveis([]);
-        
+        setImoveisOriginais([]);
         setTotalPages(1);
         setTotalItems(0);
       }
     } catch (error) {
       console.error("Erro ao carregar imóveis:", error);
       setImoveis([]);
+      setImoveisOriginais([]);
       setTotalPages(1);
       setTotalItems(0);
     } finally {
@@ -148,6 +153,29 @@ export default function CadastroImoveis() {
       if (!isInitialized) setIsInitialized(true);
     }
   }
+
+  // NOVA FUNÇÃO: Manipular resultados da busca
+  const handleSearchResults = (results: any[], isSearching: boolean) => {
+    setIsSearchingByName(isSearching);
+    if (isSearching && results.length > 0) {
+      setImoveis(results);
+      setTotalItems(results.length);
+      setTotalPages(Math.ceil(results.length / itemsPerPage));
+    } else if (isSearching && results.length === 0) {
+      setImoveis([]);
+      setTotalItems(0);
+      setTotalPages(1);
+    }
+    setCurrentPage(1);
+  };
+
+  // NOVA FUNÇÃO: Limpar busca
+  const handleClearSearch = () => {
+    setIsSearchingByName(false);
+    carregarImoveis(1, itemsPerPage);
+    setBusca("");
+    setCurrentPage(1);
+  };
 
   // Carregar categorias, amenidades e tipos de propriedade
   async function carregarMetadata() {
@@ -171,6 +199,7 @@ export default function CadastroImoveis() {
       setPropertyTypes([]);
     }
   }
+  
   useEffect(() => {
     carregarMetadata();
   }, []);
@@ -186,12 +215,12 @@ export default function CadastroImoveis() {
   }, [isInitialized]);
 
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && !isSearchingByName) {
       console.log('🔄 [FILTROS ADMIN] Filtro alterado, recarregando página 1:', filtroCriadoPor);
       setCurrentPage(1);
       carregarImoveis(1, itemsPerPage);
     }
-  }, [filtroCriadoPor, isInitialized]);
+  }, [filtroCriadoPor, isInitialized, isSearchingByName]);
 
   const handleSelect = (id: number) => {
     setSelecionados((prev) =>
@@ -380,21 +409,33 @@ export default function CadastroImoveis() {
     return "-";
   };
 
-  const imoveisFiltrados = imoveis.filter((i) => {
-    const buscaMatch = i.property_title?.toLowerCase().includes(busca.toLowerCase());
-    return buscaMatch;
-  });
+  // ATUALIZADO: Filtrar imóveis apenas quando não estiver em busca por nome
+  const imoveisFiltrados = isSearchingByName 
+    ? imoveis 
+    : imoveis.filter((i) => {
+        const buscaMatch = i.property_title?.toLowerCase().includes(busca.toLowerCase());
+        return buscaMatch;
+      });
 
   const goToNextPage = () => {
-    if (currentPage < totalPages && !isLoadingProperties) {
+    if (currentPage < totalPages && !isLoadingProperties && !isSearchingByName) {
       carregarImoveis(currentPage + 1, itemsPerPage);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (isSearchingByName) {
+      // Para busca por nome, apenas navega entre as páginas dos resultados
+      if (currentPage < totalPages) {
+        setCurrentPage(currentPage + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
   const goToPrevPage = () => {
-    if (currentPage > 1 && !isLoadingProperties) {
+    if (currentPage > 1 && !isLoadingProperties && !isSearchingByName) {
       carregarImoveis(currentPage - 1, itemsPerPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (isSearchingByName && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -403,7 +444,9 @@ export default function CadastroImoveis() {
     const newItemsPerPage = parseInt(value);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
-    carregarImoveis(1, newItemsPerPage);
+    if (!isSearchingByName) {
+      carregarImoveis(1, newItemsPerPage);
+    }
   };
 
   const handleModalSave = () => {
@@ -438,12 +481,14 @@ export default function CadastroImoveis() {
               isMobile ? "flex-col gap-2 w-full" : "flex-row gap-2"
             }`}
           >
-            <Input
-              placeholder="Buscar imóvel..."
-              className={`${isMobile ? "w-full" : "w-64"}`}
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-            />
+            {/* SUBSTITUÍDO: Input de busca pelo PropertySearch */}
+            <div className={`${isMobile ? "w-full" : "w-64"}`}>
+              <PropertySearch
+                onSearchResults={handleSearchResults}
+                onClearSearch={handleClearSearch}
+              />
+            </div>
+            
             <Button
               onClick={() => setShowModal(true)}
               className={`${isMobile ? "w-full" : ""}`}
@@ -462,6 +507,27 @@ export default function CadastroImoveis() {
           </div>
         </div>
 
+        {isSearchingByName && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-blue-600" />
+                <span className="text-blue-700 font-medium">
+                  Modo busca por nome ativo
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearSearch}
+                className="hover:bg-[#07262d] hover:text-white"
+              >
+                Voltar para lista completa
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white p-4 rounded-lg border shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <Filter className="h-5 w-5 text-gray-600" />
@@ -477,6 +543,7 @@ export default function CadastroImoveis() {
                   size="sm"
                   onClick={() => handleFilterChange("todos")}
                   className="hover:bg-[#07262d] hover:text-white"
+                  disabled={isSearchingByName}
                 >
                   Todos
                 </Button>
@@ -485,6 +552,7 @@ export default function CadastroImoveis() {
                   size="sm"
                   className="flex items-center gap-2 hover:bg-[#07262d] hover:text-white"
                   onClick={() => handleFilterChange("admin")}
+                  disabled={isSearchingByName}
                 >
                   <Shield className="h-4 w-4" /> Admin
                 </Button>
@@ -493,6 +561,7 @@ export default function CadastroImoveis() {
                   size="sm"
                   className="flex items-center gap-2 bg-purple-50 text-purple-700 hover:bg-[#07262d] hover:text-white border-purple-200"
                   onClick={() => handleFilterChange("api")}
+                  disabled={isSearchingByName}
                 >
                   <span className="font-bold">API</span> Sistema
                 </Button>
@@ -500,8 +569,12 @@ export default function CadastroImoveis() {
             </div>
 
             <div className="ml-auto flex items-center gap-2 text-sm text-gray-600">
-              <span>Mostrando {imoveisFiltrados.length} de {totalItems} imóveis</span>
-              {filtroCriadoPor !== "todos" && (
+              <span>
+                {isSearchingByName 
+                  ? `Mostrando ${imoveisFiltrados.length} imóveis na busca` 
+                  : `Mostrando ${imoveisFiltrados.length} de ${totalItems} imóveis`}
+              </span>
+              {filtroCriadoPor !== "todos" && !isSearchingByName && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -547,7 +620,7 @@ export default function CadastroImoveis() {
 
                   <TableBody>
                     {imoveisFiltrados.length > 0 ? (
-                      imoveisFiltrados.map((imovel) => {
+                      imoveisFiltrados.slice(startIndex, endIndex).map((imovel) => {
                         const criadoPor = getCriadoPorTipo(imovel);
                         const firstImage = getFirstImage(imovel);
 
@@ -619,7 +692,19 @@ export default function CadastroImoveis() {
                           colSpan={10}
                           className="text-center text-muted-foreground py-6"
                         >
-                          {totalItems === 0 ? (
+                          {isSearchingByName ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <span>Nenhum imóvel encontrado com o termo pesquisado.</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleClearSearch}
+                                className="hover:bg-[#07262d] hover:text-white"
+                              >
+                                Voltar para lista completa
+                              </Button>
+                            </div>
+                          ) : totalItems === 0 ? (
                             "Nenhum imóvel cadastrado."
                           ) : (
                             <div className="flex flex-col items-center gap-2">
@@ -646,7 +731,7 @@ export default function CadastroImoveis() {
             ) : (
               <div className="space-y-4">
                 {imoveisFiltrados.length > 0 ? (
-                  imoveisFiltrados.map((imovel) => {
+                  imoveisFiltrados.slice(startIndex, endIndex).map((imovel) => {
                     const firstImage = getFirstImage(imovel);
                     const criadoPor = getCriadoPorTipo(imovel);
 
@@ -734,7 +819,18 @@ export default function CadastroImoveis() {
                   })
                 ) : (
                   <div className="text-center text-muted-foreground p-4 border rounded-lg bg-white">
-                    {totalItems === 0 ? (
+                    {isSearchingByName ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <span>Nenhum imóvel encontrado com o termo pesquisado.</span>
+                        <Button
+                          variant="outline"
+                          onClick={handleClearSearch}
+                          className="hover:bg-[#07262d] hover:text-white"
+                        >
+                          Voltar para lista completa
+                        </Button>
+                      </div>
+                    ) : totalItems === 0 ? (
                       "Nenhum imóvel cadastrado."
                     ) : (
                       <div className="flex flex-col items-center gap-3">
