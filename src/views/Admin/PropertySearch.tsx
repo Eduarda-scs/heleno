@@ -71,7 +71,7 @@ const PropertySearch = ({ onSearchResults, onClearSearch }: PropertySearchProps)
     // Alterado: Agora redireciona para /detalhe-imovel/id-do-imovel
     setShowSuggestions(false);
     setSearchName("");
-    navigate(`/admin/detalhe-imovel/${property.id}`);
+    navigate(`/admin/detalhes-imovel/${property.id}`);
   };
 
   const handleSearch = async () => {
