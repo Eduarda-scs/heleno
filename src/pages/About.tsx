@@ -259,6 +259,17 @@ const values = [
 
 const About = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const handleToggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      videoRef.current.play();
+      setIsMuted(!isMuted);
+    }
+  };
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -292,25 +303,58 @@ const nextItem = () => {
       </Suspense>
 
       {/* HERO SECTION */}
-      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-top"
-          style={{ backgroundImage: `url(/opt-heleno_sobre.webp)` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/60 to-primary/80" />
+      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
 
-        <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-bwmodelicaLightItalic mb-6 animate-fade-up"
-            style={{ color: "#d2ab80" }}
-          >
-            Sobre <span className="text-secondary">Heleno Alves</span>
-          </h1>
-          <p className="text-lg md:text-2xl lg:text-3xl max-w-3xl mx-auto animate-fade-up text-primary-foreground/90">
-            Um dos maiores nomes do mercado imobiliário de luxo no Brasil.
-          </p>
-        </div>
+        {/* VIDEO BACKGROUND */}
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover object-[50%_30%]"
+          src="https://res.cloudinary.com/dxgehoigz/video/upload/f_auto,q_auto,w_1920/v1770826905/djoptdcukm4lrl3kqzvs.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+
+      
+
+        
+
+        {/* BOTÃO SOM */}
+        <button
+          onClick={handleToggleSound}
+          className="
+            absolute 
+            bottom-4 left-4 
+            md:bottom-6 md:left-6 
+            z-20
+            bg-black/30 backdrop-blur-md
+            text-white 
+            text-xs md:text-sm
+            px-3 py-2 md:px-4 md:py-2
+            rounded-full 
+            border border-white/30 
+            hover:bg-black/50 
+            transition 
+            shadow-lg
+          "
+        >
+          {isMuted ? (
+            <>
+              <span className="md:hidden">🔇</span>
+              <span className="hidden md:inline">🔇 Ativar Som</span>
+            </>
+          ) : (
+            <>
+              <span className="md:hidden">🔊</span>
+              <span className="hidden md:inline">🔊 Desativar Som</span>
+            </>
+          )}
+        </button>
+
       </section>
+
+
 
       {/* BIOGRAFIA - texto esquerda / foto direita */}
       <section className="py-20 bg-luxury-bg">

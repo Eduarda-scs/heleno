@@ -3,11 +3,12 @@ import type { Config } from "tailwindcss";
 export default {
   darkMode: ["class"],
   content: [
-  "./index.html",
-  "./src/**/*.{js,ts,jsx,tsx}",
-],
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
 
   prefix: "",
+
   theme: {
     container: {
       center: true,
@@ -16,6 +17,7 @@ export default {
         "2xl": "1400px",
       },
     },
+
     extend: {
       fontFamily: {
         minerva: ["Minerva", "sans-serif"],
@@ -24,10 +26,6 @@ export default {
         bwmodelica: ["BwModelica-Medium", "sans-serif"],
         bwmodelicaLightItalic: ["BwModelica-LightItalic", "sans-serif"],
         bwmodelicaHairline: ["BwModelica-Hairline", "sans-serif"],
-      },
-
-      animation: {
-        "spin-slow": "spin 3s linear infinite",
       },
 
       colors: {
@@ -84,6 +82,12 @@ export default {
       },
 
       keyframes: {
+        dropIn: {
+          "0%": { opacity: "0", transform: "translateY(-40px)" },
+          "80%": { transform: "translateY(5px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -111,6 +115,9 @@ export default {
       },
 
       animation: {
+        dropIn: "dropIn 0.8s ease-out forwards",
+
+        "spin-slow": "spin 3s linear infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.6s ease-out",
@@ -120,5 +127,6 @@ export default {
       },
     },
   },
+
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, Suspense, useRef, lazy, useMemo} from "react";
 
 // LAZY LOAD PARA REDUZIR A CADEIA CRÍTICA
 const Header = lazy(() => import("@/components/Header"));
@@ -16,6 +16,26 @@ import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Users from "lucide-react/dist/esm/icons/users";
 import Waves from "lucide-react/dist/esm/icons/waves";
 import FloatingContactWidget from "@/components/whatsapp";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend
+);
+
 
 
 
@@ -26,8 +46,216 @@ import imagem1 from "@/assets/opt-image1.webp";
 
 const imagens = [passarela, imagem2, imagem1];
 
+const valuationData = {
+  BalnearioCamboriu: [
+    { year: 2000, price: 2000 },
+    { year: 2005, price: 3500 },
+    { year: 2010, price: 5500 },
+    { year: 2015, price: 8800 },
+    { year: 2020, price: 11500 },
+    { year: 2024, price: 13911 },
+    { year: 2025, price: 14906 },
+  ],
+  SaoPaulo: [
+    { year: 2000, price: 1800 },
+    { year: 2005, price: 3000 },
+    { year: 2010, price: 4800 },
+    { year: 2015, price: 7500 },
+    { year: 2020, price: 9800 },
+    { year: 2024, price: 11374 },
+    { year: 2025, price: 11900 },
+  ],
+  RioDeJaneiro: [
+    { year: 2000, price: 1700 },
+    { year: 2005, price: 2800 },
+    { year: 2010, price: 4500 },
+    { year: 2015, price: 7000 },
+    { year: 2020, price: 9300 },
+    { year: 2024, price: 10289 },
+    { year: 2025, price: 10830 },
+  ],
+};
+
+
+function ValorizacaoChart() {
+  const chartRef = useRef<HTMLDivElement | null>(null);
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnimate(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+
+    if (chartRef.current) observer.observe(chartRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const data = useMemo(
+    () => ({
+      labels: valuationData.BalnearioCamboriu.map(d => d.year),
+      datasets: [
+        {
+          label: "Balneário Camboriú",
+          data: valuationData.BalnearioCamboriu.map(d => d.price),
+          borderColor: "#C6A46C",
+          backgroundColor: "rgba(198,164,108,0.08)",
+          borderWidth: 3.5,
+          tension: 0.45,
+          pointRadius: 0,
+          fill: true,
+        },
+        {
+          label: "São Paulo",
+          data: valuationData.SaoPaulo.map(d => d.price),
+          borderColor: "#64748B",
+          borderWidth: 1.8,
+          tension: 0.35,
+          pointRadius: 0,
+        },
+        {
+          label: "Rio de Janeiro",
+          data: valuationData.RioDeJaneiro.map(d => d.price),
+          borderColor: "#94A3B8",
+          borderWidth: 1.8,
+          tension: 0.35,
+          pointRadius: 0,
+        },
+      ],
+    }),
+    []
+  );
+
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+
+      animation: {
+        duration: 1600,
+        easing: "easeInOutCubic",
+      },
+
+      hover: {
+        animationDuration: 0,
+      },
+
+      responsiveAnimationDuration: 0,
+
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "#9CA3AF",
+            boxWidth: 12,
+            boxHeight: 2,
+            font: { size: 12, weight: "300" },
+          },
+        },
+      },
+
+      scales: {
+        y: {
+          ticks: {
+            color: "#9CA3AF",
+            callback: (v: number) =>
+              `R$ ${v.toLocaleString("pt-BR")}`,
+          },
+          grid: { drawBorder: false },
+        },
+        x: {
+          ticks: { color: "#9CA3AF" },
+          grid: { display: false },
+        },
+      },
+    }),
+    []
+  );
+
+  return (
+    <div
+      ref={chartRef}
+      className="relative w-full h-[300px] md:h-[420px] lg:h-[480px]"
+    >
+      {animate && (
+        <Line
+          data={data}
+          options={options}
+          redraw={false}
+        />
+      )}
+    </div>
+  );
+}
+
+
+
 export default function City() {
   const [atual, setAtual] = useState(0);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const video2Ref = useRef<HTMLVideoElement>(null);
+  const [isMuted2, setIsMuted2] = useState(true);
+  const [showOverlayContent, setShowOverlayContent] = useState(true);
+  const [cardsVisible, setCardsVisible] = useState(false);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  
+
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCardsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (cardsRef.current) {
+      observer.observe(cardsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+
+
+
+  const handleToggleSound2 = () => {
+    if (video2Ref.current) {
+      video2Ref.current.muted = !isMuted2;
+      video2Ref.current.play();
+      setIsMuted2(!isMuted2);
+    }
+  };
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+      setShowOverlayContent(false);
+    }, 4000); // 4 segundos
+
+    return () => clearTimeout(timer);
+  }, []);
+
+
+
+
+  const handleToggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      videoRef.current.play();
+      setIsMuted(!isMuted);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -80,25 +308,63 @@ export default function City() {
       </Suspense>
 
       {/* HERO */}
-      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(/opt-balneario.webp)` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/60 to-primary/80" />
+      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
 
-        <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-bwmodelicaLightItalic mb-6 animate-fade-up"
-            style={{ color: "#d2ab80" }}
-          >
-            Balneário Camboriú
-          </h1>
-          <p className="text-lg md:text-2xl lg:text-3xl max-w-3xl mx-auto animate-fade-up text-primary-foreground/90">
-            A cidade que une modernidade, praia, gastronomia e qualidade de vida.
-          </p>
-        </div>
-      </section>
+      {/* IMAGEM ESTÁTICA */}
+      <img
+        src="/opt-balneario.webp"
+        alt="Balneário Camboriú"
+        className={`
+          absolute inset-0 
+          w-full h-full 
+          object-cover 
+          transition-opacity duration-1000
+          ${videoLoaded ? "opacity-0" : "opacity-100"}
+        `}
+      />
+
+      <video
+        ref={videoRef}  // 👈 FALTAVA ISSO
+        className={`
+          absolute inset-0 
+          w-full h-full 
+          object-cover 
+          transition-opacity duration-1000
+          ${videoLoaded ? "opacity-100" : "opacity-0"}
+        `}
+        src="https://res.cloudinary.com/dxgehoigz/video/upload/v1770828293/o9wbjjqshmmpnv1ybdiu.mp4"
+        autoPlay
+        loop
+        muted={isMuted}  // 👈 MELHOR usar estado aqui
+        playsInline
+        onLoadedData={() => setVideoLoaded(true)}
+      />
+
+
+      {/* BOTÃO SOM */}
+      <button
+        onClick={handleToggleSound}
+        className="
+          absolute 
+          bottom-4 left-4 
+          md:bottom-6 md:left-6 
+          z-20
+          bg-black/30 backdrop-blur-md
+          text-white 
+          text-xs md:text-sm
+          px-3 py-2 md:px-4 md:py-2
+          rounded-full 
+          border border-white/30 
+          hover:bg-black/50 
+          transition 
+          shadow-lg
+        "
+      >
+        {isMuted ? "🔇" : "🔊"}
+      </button>
+
+
+    </section>
 
       {/* ESTATÍSTICAS */}
       <section className="py-12 md:py-20 bg-primary text-primary-foreground">
@@ -140,6 +406,67 @@ export default function City() {
         </div>
       </section>
 
+      
+      {/* VÍDEO INSTITUCIONAL */}
+      <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
+
+        <video
+          ref={video2Ref}
+          className="absolute inset-0 w-full h-full object-cover"
+          src="https://res.cloudinary.com/dxgehoigz/video/upload/v1770829345/sqbeiaqsrzqgv17bltie.mp4"
+          autoPlay
+          loop
+          muted={isMuted2}
+          playsInline
+        />
+
+        {/* Overlay escuro */}
+        <div className="absolute inset-0 bg-black/50" />
+
+        {/* CONTEÚDO QUE DESAPARECE */}
+        <div
+          className={`
+            absolute inset-0 
+            flex items-center justify-center 
+            text-center px-6 
+            transition-opacity duration-1000
+            ${showOverlayContent ? "opacity-100" : "opacity-0"}
+          `}
+        >
+          <div>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl text-white mb-4">
+              Viva o <span className="text-secondary">Extraordinário</span>
+            </h2>
+            <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto">
+              Descubra o que faz Balneário Camboriú ser referência em luxo e valorização imobiliária.
+            </p>
+          </div>
+        </div>
+
+        {/* BOTÃO SOM */}
+        <button
+          onClick={handleToggleSound2}
+          className="
+            absolute bottom-4 left-4 md:bottom-6 md:left-6
+            z-20
+            bg-black/30 backdrop-blur-md
+            text-white
+            text-xs md:text-sm
+            px-3 py-2 md:px-4 md:py-2
+            rounded-full
+            border border-white/30
+            hover:bg-black/50
+            transition
+            shadow-lg
+          "
+        >
+          {isMuted2 ? "🔇" : "🔊"}
+        </button>
+
+      </section>
+
+
+
       {/* INVESTIMENTO */}
       <section className="py-14 md:py-24 bg-luxury-bg">
         <div className="container mx-auto px-4">
@@ -151,13 +478,17 @@ export default function City() {
             Descubra os motivos que fazem de Balneário Camboriú o destino ideal para seu investimento
           </p>
 
-          <div className="grid sm:grid-cols-2 gap-6 md:gap-8">
+          <div
+            ref={cardsRef}
+            className="grid sm:grid-cols-2 gap-6 md:gap-8"
+          >
+
             {investmentReasons.map((reason, i) => {
               const Icon = reason.icon;
               return (
                 <div
                   key={i}
-                  className="
+                  className={`
                     group 
                     p-5 sm:p-8 
                     rounded-2xl 
@@ -168,8 +499,16 @@ export default function City() {
                     hover:-translate-y-2 
                     transition-all 
                     duration-300
-                  "
+                    ${cardsVisible ? "animate-dropIn opacity-0" : "opacity-0"}
+                  `}
+                  style={
+                    cardsVisible
+                      ? { animationDelay: `${i * 0.6}s` }
+                      : undefined
+                  }
                 >
+
+
                   <div className="flex items-start gap-4 sm:gap-5">
                     <div
                       className="
@@ -200,54 +539,55 @@ export default function City() {
         </div>
       </section>
 
-      {/* CARROSSEL + TEXTO */}
-      <section className="py-16 md:py-24 bg-luxury-bg">
-        <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-          {/* CARROSSEL AUTOMÁTICO */}
-          <div className="rounded-2xl overflow-hidden shadow-[var(--shadow-medium)] hover:shadow-[var(--shadow-gold)] transition-shadow duration-300">
-            <img
-              src={imagens[atual]}
-              className="w-full h-[300px] md:h-[450px] lg:h-[600px] object-cover transition-transform duration-700"
-              alt="Lifestyle"
-            />
-          </div>
+      {/* GRAFICO */}
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-          {/* TEXTO */}
-          <div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bwmodelica mb-6">
-              Lifestyle <span className="text-secondary">Premium</span>
-            </h2>
+            {/* TEXTO */}
+            <div>
+              <span className="text-xs text-accent font-body tracking-[0.25em] uppercase">
+                Valorização Imobiliária
+              </span>
 
-            <p className="text-lg text-muted-foreground mb-8">
-              Balneário Camboriú combina natureza, luxo, gastronomia e lazer
-              para oferecer um estilo de vida incomparável.
-            </p>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mt-3 mb-6 leading-tight">
+                A valorização imobiliária de Balneário Camboriú ao longo do tempo
+              </h2>
 
-            <ul className="space-y-5 mb-10">
-              {[
-                "Praias de águas cristalinas",
-                "Restaurantes renomados",
-                "Vida noturna sofisticada",
-                "Eventos culturais e esportivos",
-                "Shopping centers de luxo",
-              ].map((item, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-                    <ArrowRight className="w-5 h-5 text-secondary" />
-                  </div>
-                  <span className="text-lg">{item}</span>
-                </li>
-              ))}
-            </ul>
+              <div className="space-y-4 text-muted-foreground font-body text-sm md:text-base leading-relaxed">
+                <p>
+                  Ao longo das últimas décadas, Balneário Camboriú deixou de ser apenas
+                  um destino de veraneio para se consolidar como um dos mercados
+                  imobiliários mais valorizados do Brasil.
+                </p>
 
-            <Button variant="hero" size="lg" asChild>
-              <Link to="/empreendimentos">
-                Encontre Seu Imóvel <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
+                <p>
+                  A combinação entre verticalização planejada, escassez de terrenos
+                  próximos ao mar e investimentos contínuos em infraestrutura urbana
+                  impulsionou o crescimento do metro quadrado de forma consistente.
+                </p>
+
+                <p>
+                  O fortalecimento do turismo de alto padrão e a atração de
+                  empreendimentos de luxo transformaram a cidade em um polo urbano
+                  comparável a grandes referências internacionais, rendendo o título
+                  de “Dubai Brasileira”.
+                </p>
+              </div>
+            </div>
+
+            {/* GRÁFICO */}
+            <div className="w-full">
+              <ValorizacaoChart />
+            </div>
+
           </div>
         </div>
       </section>
+
+
+
+
 
       {/* SUSPENSE NO FOOTER */}
       <Suspense fallback={<div className="h-20 w-full" />}>
