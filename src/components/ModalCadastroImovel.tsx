@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { sendPropertyToWebhook } from "@/hooks/Admin/PropertyManager";
 import { useToast } from "@/components/ui/use-toast";
 import { X } from "lucide-react";
+
 
 interface Amenity {
   id: number;
@@ -84,9 +85,44 @@ export default function ModalCadastroImovel({
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<number[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+
 
   const [fotos, setFotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
+  const [errors, setErrors] = useState<{ titulo?: string }>({});
+
+  const handleNextStep = () => {
+    const newErrors: { titulo?: string } = {};
+
+    if (!form.titulo.trim()) {
+      newErrors.titulo = "O título do imóvel é obrigatório";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha os campos obrigatórios antes de continuar.",
+        variant: "destructive",
+      });
+
+      // 👇 FAZ O MODAL VOLTAR PRO TOPO
+      modalRef.current?.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+
+      return;
+    }
+
+    setErrors({});
+    setStep(2);
+  };
+
+
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -282,7 +318,11 @@ export default function ModalCadastroImovel({
             backgroundColor: "#07262d",
           }}
         >
-          <div className="overflow-y-auto p-6">
+          <div
+            ref={modalRef}
+            className="overflow-y-auto p-6"
+          >
+
             <DialogHeader>
               <DialogTitle className="text-white">
                 {step === 1 ? "Cadastrar Imóvel" : "Adicionar Fotos e Vídeos"}
@@ -297,9 +337,20 @@ export default function ModalCadastroImovel({
                     placeholder="Título"
                     value={form.titulo}
                     onChange={handleChange}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                    className={`bg-white/10 text-white placeholder:text-white/60 ${
+                      errors.titulo
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : "border-white/20"
+                    }`}
                     disabled={isSubmitting}
                   />
+
+                  {errors.titulo && (
+                    <p className="text-red-400 text-sm mt-1">
+                      {errors.titulo}
+                    </p>
+                  )}
+
                   <Textarea
                     name="descricao"
                     placeholder="Descrição"
@@ -516,12 +567,13 @@ export default function ModalCadastroImovel({
                     Cancelar
                   </Button>
                   <Button
-                    onClick={() => setStep(2)}
+                    onClick={handleNextStep}
                     className="bg-white text-[#07262d] hover:bg-white/90"
                     disabled={isSubmitting}
                   >
                     Próximo
                   </Button>
+
                 </div>
               </div>
             ) : (

@@ -82,6 +82,7 @@ export default function CadastroImoveis() {
   const [showModal, setShowModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false); // Novo estado para controle
+  
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 

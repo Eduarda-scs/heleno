@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState, useEffect, Suspense, useRef, lazy, useMemo} from "react";
+import {InvestorProfileSection} from "@/components/InvestorProfileSection";
 
 // LAZY LOAD PARA REDUZIR A CADEIA CRÍTICA
 const Header = lazy(() => import("@/components/Header"));
@@ -584,6 +585,8 @@ export default function City() {
           </div>
         </div>
       </section>
+
+      <InvestorProfileSection />
 
 
 
